@@ -7,145 +7,50 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
   :root {
-    --bg: #f4f5f7;
-    --card: #ffffff;
-    --text: #111827;
-    --muted: #6b7280;
-    --line: #e5e7eb;
-    --accent: #4f46e5;
-    --accent-hover: #4338ca;
-    --accent-soft: #eef2ff;
-    --radius: 16px;
+    --bg: #f4f5f7; --card: #ffffff; --text: #111827; --muted: #6b7280;
+    --line: #e5e7eb; --accent: #4f46e5; --accent-hover: #4338ca;
+    --accent-soft: #eef2ff; --radius: 16px;
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--text);
+    margin: 0; background: var(--bg); color: var(--text);
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
-  .wrap {
-    max-width: 520px;
-    margin: 0 auto;
-    padding: 24px 16px 56px;
-    display: grid;
-    gap: 16px;
-  }
+  .wrap { max-width: 520px; margin: 0 auto; padding: 24px 16px 56px; display: grid; gap: 16px; }
   header h1 { margin: 0; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em; }
   header p { margin: 4px 0 0; color: var(--muted); font-size: 0.9rem; }
-
-  .card {
-    background: var(--card);
-    border-radius: var(--radius);
-    padding: 20px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04);
-  }
+  .card { background: var(--card); border-radius: var(--radius); padding: 20px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04); }
   .card h2 { margin: 0 0 16px; font-size: 1rem; font-weight: 600; }
-
   .field { margin-bottom: 20px; }
-  .label {
-    display: block;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--muted);
-    margin-bottom: 8px;
-  }
-
-  /* Segmented control pro účet */
-  .seg {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    background: #f3f4f6;
-    border-radius: 12px;
-    padding: 4px;
-    gap: 4px;
-  }
-  .seg button {
-    border: 0;
-    background: transparent;
-    padding: 10px 0;
-    border-radius: 9px;
-    font: inherit;
-    font-weight: 500;
-    color: var(--muted);
-    cursor: pointer;
-    transition: 0.15s;
-  }
-  .seg button.active {
-    background: #fff;
-    color: var(--text);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  }
-
-  /* Chipy pro kategorie */
+  .label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--muted); margin-bottom: 8px; }
+  .seg { display: grid; grid-template-columns: repeat(3, 1fr); background: #f3f4f6;
+    border-radius: 12px; padding: 4px; gap: 4px; }
+  .seg button { border: 0; background: transparent; padding: 10px 0; border-radius: 9px;
+    font: inherit; font-weight: 500; color: var(--muted); cursor: pointer; transition: 0.15s; }
+  .seg button.active { background: #fff; color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-  .chip {
-    border: 1px solid var(--line);
-    background: #fff;
-    padding: 8px 14px;
-    border-radius: 999px;
-    font: inherit;
-    font-size: 0.9rem;
-    color: var(--text);
-    cursor: pointer;
-    transition: 0.15s;
-  }
+  .chip { border: 1px solid var(--line); background: #fff; padding: 8px 14px; border-radius: 999px;
+    font: inherit; font-size: 0.9rem; color: var(--text); cursor: pointer; transition: 0.15s; }
   .chip:hover { border-color: #c7d2fe; }
   .chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
   .hint { color: var(--muted); font-size: 0.85rem; }
-
   input[type="text"], input[type="password"], input[type="number"] {
-    width: 100%;
-    padding: 12px 14px;
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    font: inherit;
-    font-size: 1rem;
-    background: #fff;
-    color: var(--text);
-    transition: 0.15s;
+    width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px;
+    font: inherit; font-size: 1rem; background: #fff; color: var(--text); transition: 0.15s;
   }
-  input:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-soft);
-  }
+  input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
   .amount-wrap { position: relative; }
-  .amount-wrap input {
-    font-size: 1.6rem;
-    font-weight: 600;
-    padding: 14px 56px 14px 16px;
-  }
-  .amount-wrap span {
-    position: absolute;
-    right: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--muted);
-    font-weight: 600;
-    pointer-events: none;
-  }
+  .amount-wrap input { font-size: 1.6rem; font-weight: 600; padding: 14px 56px 14px 16px; }
+  .amount-wrap span { position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+    color: var(--muted); font-weight: 600; pointer-events: none; }
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-  button.submit {
-    width: 100%;
-    margin-top: 8px;
-    padding: 14px;
-    border: 0;
-    border-radius: 12px;
-    background: var(--accent);
-    color: #fff;
-    font: inherit;
-    font-weight: 600;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: 0.15s;
-  }
+  button.submit { width: 100%; margin-top: 8px; padding: 14px; border: 0; border-radius: 12px;
+    background: var(--accent); color: #fff; font: inherit; font-weight: 600; font-size: 1rem;
+    cursor: pointer; transition: 0.15s; }
   button.submit:hover { background: var(--accent-hover); }
   button.submit:disabled { opacity: 0.6; cursor: default; }
-
-  /* Přehled */
   .summary-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
   .total { font-size: 1.75rem; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
   .total-sub { color: var(--muted); font-size: 0.85rem; }
@@ -153,36 +58,22 @@
   .legend { display: grid; gap: 10px; }
   .legend-item { display: flex; align-items: center; font-size: 0.9rem; }
   .legend-item .dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 10px; flex-shrink: 0; }
-  .legend-item .name { flex: 1; color: var(--text); }
+  .legend-item .name { flex: 1; }
   .legend-item .val { font-weight: 600; font-variant-numeric: tabular-nums; }
   .empty { text-align: center; color: var(--muted); font-size: 0.9rem; padding: 24px 0; }
-
-  .toast {
-    position: fixed;
-    left: 50%;
-    bottom: 24px;
-    transform: translate(-50%, 120px);
-    background: #111827;
-    color: #fff;
-    padding: 12px 18px;
-    border-radius: 12px;
-    font-size: 0.9rem;
-    opacity: 0;
-    transition: 0.3s;
-    pointer-events: none;
-  }
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 120px);
+    background: #111827; color: #fff; padding: 12px 18px; border-radius: 12px; font-size: 0.9rem;
+    opacity: 0; transition: 0.3s; pointer-events: none; }
   .toast.show { transform: translate(-50%, 0); opacity: 1; }
 </style>
 </head>
 <body>
-
 <div class="wrap">
   <header>
     <h1>Domácí rozpočet</h1>
     <p id="today"></p>
   </header>
 
-  <!-- Zadávání výdaje -->
   <form class="card" id="expenseForm">
     <h2>Nový výdaj</h2>
 
@@ -202,9 +93,7 @@
 
     <div class="field">
       <span class="label">Podkategorie</span>
-      <div class="chips sub-chips" id="subChips">
-        <span class="hint">Nejdřív vyber kategorii</span>
-      </div>
+      <div class="chips" id="subChips"><span class="hint">Nejdřív vyber kategorii</span></div>
     </div>
 
     <div class="field">
@@ -229,16 +118,13 @@
     <button type="submit" class="submit" id="submitBtn">Odeslat výdaj</button>
   </form>
 
-  <!-- Přehled měsíce -->
   <section class="card">
     <h2>Tento měsíc</h2>
     <div class="summary-head">
       <p class="total" id="monthTotal">—</p>
       <span class="total-sub">celkem</span>
     </div>
-    <div class="chart-box">
-      <canvas id="chart"></canvas>
-    </div>
+    <div class="chart-box"><canvas id="chart"></canvas></div>
     <div class="legend" id="legend"></div>
   </section>
 </div>
@@ -246,7 +132,6 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  // Kategorie a podkategorie (stejné jako v tabulce)
   const CATEGORIES = {
     "Jídlo": ["Obchod", "Restaurace", "Hospoda", "Kafíčko"],
     "Drogerie": ["Čistění", "Praní", "Kosmetika"],
@@ -257,18 +142,19 @@
     "Volný čas": ["Sport", "Výlety", "Dovolená"],
     "Ostatní": ["Elektronika", "Oblečení", "Dárky", "Investice (XTB)", "Jiné"]
   };
-
   const COLORS = ["#4f46e5", "#10b981", "#f59e0b", "#ef4444", "#06b6d4", "#8b5cf6", "#ec4899", "#84cc16"];
+  const COLOR_BY_CAT = {};
+  Object.keys(CATEGORIES).forEach((c, i) => COLOR_BY_CAT[c] = COLORS[i % COLORS.length]);
 
-  // Apps Script URL
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwUWMPw8rI3W8TL2nxPD4ue4blpo5dwmTb_5Wjh-n7UGRWJqYrvqu-z2RUqIb-iR5gs/exec";
 
-  let state = { account: "Společná", category: "", subcategory: "" };
+  const state = { account: "Společná", category: "", subcategory: "" };
   let chart = null;
 
-  // Datum v hlavičce
-  document.getElementById("today").textContent =
-    new Date().toLocaleDateString("cs-CZ", { day: "numeric", month: "long", year: "numeric" });
+  const $ = id => document.getElementById(id);
+  const fmt = n => Math.round(n).toLocaleString("cs-CZ") + " Kč";
+
+  $("today").textContent = new Date().toLocaleDateString("cs-CZ", { day: "numeric", month: "long", year: "numeric" });
 
   // Výběr účtu
   document.querySelectorAll("#accounts button").forEach(btn => {
@@ -280,26 +166,23 @@
   });
 
   // Kategorie
-  const catWrap = document.getElementById("categoryChips");
   Object.keys(CATEGORIES).forEach(cat => {
     const b = document.createElement("button");
     b.type = "button";
     b.className = "chip";
     b.textContent = cat;
-    b.addEventListener("click", () => selectCategory(cat, b));
-    catWrap.appendChild(b);
+    b.addEventListener("click", () => {
+      document.querySelectorAll("#categoryChips .chip").forEach(c => c.classList.remove("active"));
+      b.classList.add("active");
+      state.category = cat;
+      state.subcategory = "";
+      renderSubs(cat);
+    });
+    $("categoryChips").appendChild(b);
   });
 
-  function selectCategory(cat, btn) {
-    document.querySelectorAll("#categoryChips .chip").forEach(c => c.classList.remove("active"));
-    btn.classList.add("active");
-    state.category = cat;
-    state.subcategory = "";
-    renderSubs(cat);
-  }
-
   function renderSubs(cat) {
-    const wrap = document.getElementById("subChips");
+    const wrap = $("subChips");
     wrap.innerHTML = "";
     CATEGORIES[cat].forEach(sub => {
       const b = document.createElement("button");
@@ -315,14 +198,25 @@
     });
   }
 
-  // Odeslání výdaje
-  const form = document.getElementById("expenseForm");
-  const submitBtn = document.getElementById("submitBtn");
+  function toast(msg) {
+    const t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2200);
+  }
 
-  form.addEventListener("submit", async (e) => {
+  // Odeslání výdaje
+  const submitBtn = $("submitBtn");
+  $("expenseForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     if (!state.category || !state.subcategory) {
       toast("Vyber kategorii a podkategorii");
+      return;
+    }
+    const amount = $("amount").value;
+    const pin = $("pinCode").value;
+    if (!amount || !pin) {
+      toast("Vyplň částku a PIN");
       return;
     }
 
@@ -333,22 +227,24 @@
       account: state.account,
       category: state.category,
       subcategory: state.subcategory,
-      amount: document.getElementById("amount").value,
-      note: document.getElementById("note").value,
-      pin: document.getElementById("pinCode").value
+      amount: amount,
+      note: $("note").value,
+      pin: pin
     };
 
     try {
+      // no-cors: odpověď nelze přečíst, ověříme to přehledem níž
       await fetch(SCRIPT_URL, {
         method: "POST",
         mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "text/plain" },
         body: JSON.stringify(payload)
       });
-      toast("Výdaj uložen");
-      document.getElementById("amount").value = "";
-      document.getElementById("note").value = "";
-      setTimeout(loadData, 1500); // dej tabulce chvilku na zápis
+      toast("Výdaj odeslán");
+      $("amount").value = "";
+      $("note").value = "";
+      $("pinCode").value = "";
+      setTimeout(loadData, 2000);
     } catch (err) {
       toast("Chyba při odesílání");
     } finally {
@@ -357,64 +253,74 @@
     }
   });
 
-  // Načtení dat a graf
-  const COLOR_BY_CAT = {};
-  Object.keys(CATEGORIES).forEach((c, i) => COLOR_BY_CAT[c] = COLORS[i % COLORS.length]);
+  // Načtení dat přes JSONP (obejde CORS)
+  function loadData() {
+    const name = "cb_" + Date.now();
+    const script = document.createElement("script");
+    const timer = setTimeout(fail, 10000);
 
-  async function loadData() {
-    try {
-      const res = await fetch(SCRIPT_URL);
-      const rows = await res.json();
-      const now = new Date();
-      const totals = {};
-      let sum = 0;
-
-      // První řádek je hlavička
-      rows.slice(1).forEach(r => {
-        const d = new Date(r[0]);
-        if (isNaN(d) || d.getMonth() !== now.getMonth() || d.getFullYear() !== now.getFullYear()) return;
-        const amt = Number(r[1]) || 0;
-        const cat = r[3] || "Ostatní";
-        totals[cat] = (totals[cat] || 0) + amt;
-        sum += amt;
-      });
-
-      renderSummary(totals, sum);
-    } catch (err) {
-      document.getElementById("monthTotal").textContent = "—";
-      document.getElementById("legend").innerHTML =
-        '<div class="empty">Data se nepodařilo načíst</div>';
+    function cleanup() {
+      clearTimeout(timer);
+      delete window[name];
+      script.remove();
     }
+    function fail() {
+      cleanup();
+      $("monthTotal").textContent = "—";
+      $("legend").innerHTML = '<div class="empty">Data se nepodařilo načíst</div>';
+    }
+
+    window[name] = rows => {
+      cleanup();
+      if (!Array.isArray(rows)) return fail();
+      renderFromRows(rows);
+    };
+    script.onerror = fail;
+    script.src = SCRIPT_URL + "?callback=" + name;
+    document.body.appendChild(script);
+  }
+
+  function renderFromRows(rows) {
+    const now = new Date();
+    const totals = {};
+    let sum = 0;
+    rows.forEach(r => {
+      const d = new Date(r[0]);
+      // Hlavička a prázdné řádky se přeskočí, protože nejsou platné datum
+      if (isNaN(d) || d.getMonth() !== now.getMonth() || d.getFullYear() !== now.getFullYear()) return;
+      const amt = Number(r[1]) || 0;
+      const cat = r[3] || "Ostatní";
+      totals[cat] = (totals[cat] || 0) + amt;
+      sum += amt;
+    });
+    renderSummary(totals, sum);
   }
 
   function renderSummary(totals, sum) {
-    const fmt = n => n.toLocaleString("cs-CZ", { maximumFractionDigits: 0 }) + " Kč";
-    document.getElementById("monthTotal").textContent = fmt(sum);
-
+    $("monthTotal").textContent = fmt(sum);
     const cats = Object.keys(totals).sort((a, b) => totals[b] - totals[a]);
-    const labels = cats.length ? cats : ["Zatím nic"];
     const values = cats.length ? cats.map(c => totals[c]) : [1];
     const colors = cats.length ? cats.map(c => COLOR_BY_CAT[c] || "#9ca3af") : ["#e5e7eb"];
-
-    const config = {
-      type: "doughnut",
-      data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 0 }] },
-      options: {
-        cutout: "70%",
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false }, tooltip: { enabled: cats.length > 0 } }
-      }
-    };
+    const labels = cats.length ? cats : ["Zatím nic"];
 
     if (chart) {
-      chart.data = config.data;
+      chart.data.labels = labels;
+      chart.data.datasets[0].data = values;
+      chart.data.datasets[0].backgroundColor = colors;
       chart.update();
     } else {
-      chart = new Chart(document.getElementById("chart"), config);
+      chart = new Chart($("chart"), {
+        type: "doughnut",
+        data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 0 }] },
+        options: {
+          cutout: "70%",
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { enabled: cats.length > 0 } }
+        }
+      });
     }
 
-    const legend = document.getElementById("legend");
-    legend.innerHTML = cats.length
+    $("legend").innerHTML = cats.length
       ? cats.map(c => `
           <div class="legend-item">
             <span class="dot" style="background:${COLOR_BY_CAT[c] || "#9ca3af"}"></span>
@@ -422,14 +328,6 @@
             <span class="val">${fmt(totals[c])}</span>
           </div>`).join("")
       : '<div class="empty">Tento měsíc zatím žádné výdaje</div>';
-  }
-
-  // Malý toast
-  function toast(msg) {
-    const t = document.getElementById("toast");
-    t.textContent = msg;
-    t.classList.add("show");
-    setTimeout(() => t.classList.remove("show"), 2200);
   }
 
   loadData();
