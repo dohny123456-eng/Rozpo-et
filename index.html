@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="cs" class="dark">
+<html lang="cs">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,138 +7,183 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
   :root {
-    --bg: #f4f5f7; --card: #ffffff; --text: #111827; --muted: #6b7280;
-    --line: #e5e7eb; --input: #ffffff; --chip-hover: #c7d2fe;
-    --accent: #4f46e5; --accent-hover: #4338ca; --accent-soft: #eef2ff;
-    --seg: #f3f4f6; --seg-active: #ffffff; --counter: #9ca3af;
-    --toast-bg: #111827; --toast-text: #ffffff; --shadow: rgba(0,0,0,0.04);
-  }
-  html.dark {
-    --bg: #0b0d12; --card: #161a22; --text: #e5e7eb; --muted: #9ca3af;
-    --line: #2a2f3a; --input: #0f1218; --chip-hover: #4338ca;
-    --accent: #6366f1; --accent-hover: #818cf8; --accent-soft: #1e1b4b;
-    --seg: #0f1218; --seg-active: #242a36; --counter: #6b7280;
-    --toast-bg: #e5e7eb; --toast-text: #111827; --shadow: rgba(0,0,0,0.4);
+    --bg: #0d0e10;
+    --surface: #14161a;
+    --text: #ecebe6;
+    --muted: #8a8a84;
+    --faint: #5c5c57;
+    --line: #23262c;
+    --field: #101215;
+    --accent: #9fd6b8;
+    --accent-ink: #0d0e10;
+    --serif: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0; background: var(--bg); color: var(--text);
-    font-family: Arial, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.5;
     -webkit-font-smoothing: antialiased;
   }
-  .wrap { max-width: 520px; margin: 0 auto; padding: 24px 16px 56px; display: grid; gap: 16px; }
-  header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-  header h1 { margin: 0; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em; }
-  header p { margin: 4px 0 0; color: var(--muted); font-size: 0.9rem; }
-  .theme-btn {
-    border: 1px solid var(--line); background: var(--card); color: var(--text);
-    border-radius: 999px; width: 40px; height: 40px; font-size: 1.1rem; cursor: pointer; flex-shrink: 0;
+  .wrap { max-width: 480px; margin: 0 auto; padding: 36px 20px 80px; }
+
+  header { margin-bottom: 36px; }
+  .eyebrow {
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint);
   }
-  .card { background: var(--card); border-radius: 16px; padding: 20px;
-    box-shadow: 0 1px 2px var(--shadow), 0 4px 16px var(--shadow); }
-  .card h2 { margin: 0 0 16px; font-size: 1rem; font-weight: 600; }
-  .field { margin-bottom: 20px; }
-  .label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--muted); margin-bottom: 8px; }
-  .seg { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--seg);
-    border-radius: 12px; padding: 4px; gap: 4px; }
-  .seg button { border: 0; background: transparent; padding: 10px 0; border-radius: 9px;
-    font: inherit; font-weight: 500; color: var(--muted); cursor: pointer; transition: 0.15s; }
-  .seg button.active { background: var(--seg-active); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  h1 {
+    margin: 6px 0 4px; font-family: var(--serif); font-weight: 400;
+    font-size: 30px; letter-spacing: -0.01em;
+  }
+  #today { margin: 0; color: var(--muted); font-size: 13px; }
+
+  section { border-top: 1px solid var(--line); padding: 26px 0; }
+  section:first-of-type { border-top: 0; padding-top: 0; }
+  .sec-title {
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted); margin: 0 0 16px;
+  }
+
+  /* Účet: textové záložky */
+  .tabs { display: flex; gap: 22px; border-bottom: 1px solid var(--line); }
+  .tabs button {
+    background: none; border: 0; padding: 0 0 12px; margin-bottom: -1px;
+    font: inherit; color: var(--muted); cursor: pointer;
+    border-bottom: 2px solid transparent; transition: color 0.15s;
+  }
+  .tabs button:hover { color: var(--text); }
+  .tabs button.active { color: var(--text); border-bottom-color: var(--accent); }
+
+  /* Chipy */
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-  .chip { border: 1px solid var(--line); background: var(--input); padding: 8px 14px; border-radius: 999px;
-    font: inherit; font-size: 0.9rem; color: var(--text); cursor: pointer; transition: 0.15s; }
-  .chip:hover { border-color: var(--chip-hover); }
-  .chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .hint { color: var(--muted); font-size: 0.85rem; }
-  input[type="text"], input[type="password"], input[type="number"] {
-    width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px;
-    font: inherit; font-size: 1rem; background: var(--input); color: var(--text); transition: 0.15s;
+  .chip {
+    background: transparent; border: 1px solid var(--line); color: var(--text);
+    padding: 7px 13px; border-radius: 6px; font: inherit; font-size: 14px; cursor: pointer;
+    transition: all 0.15s;
   }
-  input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-  .amount-wrap { position: relative; }
-  .amount-wrap input { font-size: 1.6rem; font-weight: 600; padding: 14px 56px 14px 16px; }
-  .amount-wrap span { position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
-    color: var(--muted); font-weight: 600; pointer-events: none; }
-  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  button.submit { width: 100%; margin-top: 8px; padding: 14px; border: 0; border-radius: 12px;
-    background: var(--accent); color: #fff; font: inherit; font-weight: 600; font-size: 1rem;
-    cursor: pointer; transition: 0.15s; }
-  button.submit:hover { background: var(--accent-hover); }
-  button.submit:disabled { opacity: 0.6; cursor: default; }
-  .summary-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
-  .total { font-size: 1.75rem; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
-  .total-sub { color: var(--muted); font-size: 0.85rem; }
-  .chart-box { position: relative; height: 220px; margin: 16px 0; }
-  .legend { display: grid; gap: 10px; }
-  .legend-item { display: flex; align-items: center; font-size: 0.9rem; }
-  .legend-item .dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 10px; flex-shrink: 0; }
-  .legend-item .name { flex: 1; }
-  .legend-item .val { font-weight: 600; font-variant-numeric: tabular-nums; }
-  .empty { text-align: center; color: var(--muted); font-size: 0.9rem; padding: 24px 0; }
-  .counter { text-align: right; color: var(--counter); font-size: 0.7rem; margin-top: 12px; line-height: 1.5; }
-  .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 120px);
-    background: var(--toast-bg); color: var(--toast-text); padding: 12px 18px; border-radius: 12px;
-    font-size: 0.9rem; opacity: 0; transition: 0.3s; pointer-events: none; }
+  .chip:hover { border-color: var(--faint); }
+  .chip.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .hint { color: var(--faint); font-size: 14px; }
+
+  /* Částka */
+  .amount-wrap { position: relative; border-bottom: 1px solid var(--line); }
+  .amount-wrap input {
+    background: transparent; border: 0; border-radius: 0; padding: 6px 40px 10px 0;
+    font-family: var(--serif); font-size: 44px; color: var(--text);
+  }
+  .amount-wrap input:focus { box-shadow: none; }
+  .amount-wrap::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px;
+    background: var(--accent); transform: scaleX(0); transition: transform 0.25s;
+  }
+  .amount-wrap:focus-within::after { transform: scaleX(1); }
+  .amount-wrap span {
+    position: absolute; right: 0; top: 50%; transform: translateY(-60%);
+    color: var(--muted); font-size: 16px; pointer-events: none;
+  }
+
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .field { margin-top: 22px; }
+  .label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+
+  input[type="text"], input[type="password"], input[type="number"] {
+    width: 100%; padding: 11px 0; border: 0; border-bottom: 1px solid var(--line);
+    background: transparent; color: var(--text); font: inherit; font-size: 15px;
+    border-radius: 0; transition: border-color 0.15s;
+  }
+  input::placeholder { color: var(--faint); }
+  input:focus { outline: none; border-bottom-color: var(--accent); }
+
+  button.submit {
+    width: 100%; margin-top: 30px; padding: 15px; border: 0; border-radius: 8px;
+    background: var(--accent); color: var(--accent-ink); font: inherit; font-weight: 600;
+    font-size: 15px; cursor: pointer; transition: opacity 0.15s;
+  }
+  button.submit:hover { opacity: 0.9; }
+  button.submit:disabled { opacity: 0.5; cursor: default; }
+
+  /* Přehled */
+  .total-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 22px; }
+  .total { font-family: var(--serif); font-size: 40px; margin: 0; letter-spacing: -0.01em; font-weight: 400; }
+  .total-sub { color: var(--muted); font-size: 13px; }
+  .chart-box { position: relative; height: 200px; margin-bottom: 22px; }
+  .legend { display: grid; gap: 0; }
+  .legend-item {
+    display: flex; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); font-size: 14px;
+  }
+  .legend-item:first-child { border-top: 0; }
+  .legend-item .dot { width: 8px; height: 8px; border-radius: 2px; margin-right: 12px; flex-shrink: 0; }
+  .legend-item .name { flex: 1; color: var(--text); }
+  .legend-item .val { color: var(--text); font-variant-numeric: tabular-nums; }
+  .empty { color: var(--faint); font-size: 14px; padding: 12px 0; }
+  .counter { margin-top: 20px; text-align: right; color: var(--faint); font-size: 11px; line-height: 1.6; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 120px);
+    background: var(--text); color: var(--bg); padding: 11px 18px; border-radius: 8px;
+    font-size: 14px; opacity: 0; transition: 0.3s; pointer-events: none;
+  }
   .toast.show { transform: translate(-50%, 0); opacity: 1; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <div>
-      <h1>Domácí rozpočet</h1>
-      <p id="today"></p>
-    </div>
-    <button class="theme-btn" id="themeBtn" type="button" title="Přepnout režim">☀</button>
+    <div class="eyebrow">Rozpočet</div>
+    <h1>Domácí rozpočet</h1>
+    <p id="today"></p>
   </header>
 
-  <form class="card" id="expenseForm">
-    <h2>Nový výdaj</h2>
+  <form id="expenseForm">
+    <section>
+      <h2 class="sec-title">Nový výdaj</h2>
 
-    <div class="field">
-      <span class="label">Účet</span>
-      <div class="seg" id="accounts">
+      <div class="tabs" id="accounts">
         <button type="button" data-acc="Společný">Společný</button>
         <button type="button" data-acc="Pavel">Pavel</button>
         <button type="button" data-acc="Gabi">Gabi</button>
       </div>
-    </div>
 
-    <div class="field">
-      <span class="label">Kategorie</span>
-      <div class="chips" id="categoryChips"></div>
-    </div>
-
-    <div class="field">
-      <span class="label">Podkategorie</span>
-      <div class="chips" id="subChips"><span class="hint">Nejdřív vyber kategorii</span></div>
-    </div>
-
-    <div class="field">
-      <span class="label">Částka</span>
-      <div class="amount-wrap">
-        <input type="number" id="amount" placeholder="0" required step="any" inputmode="decimal">
-        <span>Kč</span>
-      </div>
-    </div>
-
-    <div class="row">
       <div class="field">
-        <span class="label">Poznámka</span>
-        <input type="text" id="note" placeholder="Kaufland, nafta…">
+        <span class="label">Kategorie</span>
+        <div class="chips" id="categoryChips"></div>
       </div>
-      <div class="field">
-        <span class="label">PIN</span>
-        <input type="password" id="pinCode" placeholder="••••" required inputmode="numeric">
-      </div>
-    </div>
 
-    <button type="submit" class="submit" id="submitBtn">Odeslat výdaj</button>
+      <div class="field">
+        <span class="label">Podkategorie</span>
+        <div class="chips" id="subChips"><span class="hint">Nejdřív vyber kategorii</span></div>
+      </div>
+
+      <div class="field">
+        <span class="label">Částka</span>
+        <div class="amount-wrap">
+          <input type="number" id="amount" placeholder="0" required step="any" inputmode="decimal">
+          <span>Kč</span>
+        </div>
+      </div>
+
+      <div class="row field">
+        <div>
+          <span class="label">Poznámka</span>
+          <input type="text" id="note" placeholder="Kaufland, nafta…">
+        </div>
+        <div>
+          <span class="label">PIN</span>
+          <input type="password" id="pinCode" placeholder="••••" required inputmode="numeric">
+        </div>
+      </div>
+
+      <button type="submit" class="submit" id="submitBtn">Odeslat výdaj</button>
+    </section>
   </form>
 
-  <section class="card">
-    <h2>Tento měsíc</h2>
-    <div class="summary-head">
+  <section>
+    <h2 class="sec-title">Tento měsíc</h2>
+    <div class="total-row">
       <p class="total" id="monthTotal">—</p>
       <span class="total-sub">celkem</span>
     </div>
@@ -161,7 +206,7 @@
     "Volný čas": ["Sport", "Klavír", "Výlety", "Dovolená"],
     "Ostatní": ["Elektronika", "Oblečení", "Dárky", "Investice (XTB)", "Jiné"]
   };
-  const COLORS = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#06b6d4", "#8b5cf6", "#ec4899", "#84cc16"];
+  const COLORS = ["#9fd6b8", "#e6b87d", "#8fb0d9", "#d98f8f", "#b8a3d9", "#d9cf8f", "#7fb5b0", "#c9c4b8"];
   const COLOR_BY_CAT = {};
   Object.keys(CATEGORIES).forEach((c, i) => COLOR_BY_CAT[c] = COLORS[i % COLORS.length]);
 
@@ -174,19 +219,6 @@
   const fmt = n => Math.round(n).toLocaleString("cs-CZ") + " Kč";
 
   $("today").textContent = new Date().toLocaleDateString("cs-CZ", { day: "numeric", month: "long", year: "numeric" });
-
-  // Režim (výchozí noční)
-  function applyTheme(dark) {
-    document.documentElement.classList.toggle("dark", dark);
-    $("themeBtn").textContent = dark ? "☀" : "☾";
-  }
-  applyTheme(localStorage.getItem("theme") !== "light");
-  $("themeBtn").addEventListener("click", () => {
-    const dark = !document.documentElement.classList.contains("dark");
-    localStorage.setItem("theme", dark ? "dark" : "light");
-    applyTheme(dark);
-    if (chart) chart.update();
-  });
 
   // Výběr účtu
   document.querySelectorAll("#accounts button").forEach(btn => {
@@ -359,7 +391,7 @@
     $("monthTotal").textContent = fmt(sum);
     const cats = Object.keys(totals).sort((a, b) => totals[b] - totals[a]);
     const values = cats.length ? cats.map(c => totals[c]) : [1];
-    const colors = cats.length ? cats.map(c => COLOR_BY_CAT[c] || "#9ca3af") : ["#2a2f3a"];
+    const colors = cats.length ? cats.map(c => COLOR_BY_CAT[c] || "#5c5c57") : ["#23262c"];
     const labels = cats.length ? cats : ["Zatím nic"];
 
     if (chart) {
@@ -372,7 +404,7 @@
         type: "doughnut",
         data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 0 }] },
         options: {
-          cutout: "70%",
+          cutout: "78%",
           maintainAspectRatio: false,
           plugins: { legend: { display: false }, tooltip: { enabled: cats.length > 0 } }
         }
@@ -382,7 +414,7 @@
     $("legend").innerHTML = cats.length
       ? cats.map(c => `
           <div class="legend-item">
-            <span class="dot" style="background:${COLOR_BY_CAT[c] || "#9ca3af"}"></span>
+            <span class="dot" style="background:${COLOR_BY_CAT[c] || "#5c5c57"}"></span>
             <span class="name">${c}</span>
             <span class="val">${fmt(totals[c])}</span>
           </div>`).join("")
