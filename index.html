@@ -7,191 +7,268 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
   :root {
-    --bg: #121212;
-    --card: #1e1e1e;
-    --field: #161616;
+    --bg: #0d0d0f;
     --gold: #d4af37;
     --gold-hover: #f3e5ab;
-    --text: #e0e0e0;
-    --muted: #a0a0a0;
-    --faint: #6b6b6b;
-    --border: #333333;
+    --text: #ececec;
+    --muted: #9a9aa0;
+    --faint: #5e5e66;
+    --field: rgba(0,0,0,0.35);
     --serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
     --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 15px;
-    line-height: 1.55;
-    -webkit-font-smoothing: antialiased;
+    margin: 0; min-height: 100vh; color: var(--text); font-family: var(--sans);
+    font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased;
+    background:
+      radial-gradient(900px 500px at 10% -10%, rgba(212,175,55,0.12), transparent 60%),
+      radial-gradient(700px 400px at 100% 0%, rgba(255,255,255,0.06), transparent 60%),
+      var(--bg);
+    background-attachment: fixed;
   }
-  .wrap { max-width: 480px; margin: 0 auto; padding: 32px 18px 80px; }
 
-  header { text-align: center; padding-bottom: 22px; margin-bottom: 26px; border-bottom: 1px solid var(--border); }
-  header h1 {
-    margin: 0; font-family: var(--serif); font-weight: 500; font-size: 2.1rem;
-    letter-spacing: 0.01em; color: var(--text);
+  /* Skleněné prvky */
+  .glass {
+    background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.025));
+    border: 1px solid rgba(255,255,255,0.09);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    border-radius: 16px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 12px 40px rgba(0,0,0,0.45);
   }
-  header h1 em { color: var(--gold); font-style: italic; }
-  #today { margin: 6px 0 0; color: var(--muted); font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; }
 
-  .card {
-    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
-    padding: 22px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  /* Horní lišta */
+  .topbar {
+    position: sticky; top: 12px; z-index: 10; max-width: 1100px; margin: 12px auto 0;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 10px 12px 10px 18px; border-radius: 14px;
   }
-  .card-title {
-    margin: 0 0 18px; font-family: var(--serif); font-size: 1.45rem; font-weight: 500;
-    color: var(--text);
+  .brand { font-family: var(--serif); font-size: 20px; white-space: nowrap; }
+  .brand em { color: var(--gold); }
+  .tabs { display: flex; gap: 4px; background: var(--field); border-radius: 10px; padding: 4px; }
+  .tabs button {
+    background: transparent; border: 0; color: var(--muted); padding: 8px 14px;
+    border-radius: 8px; font: inherit; font-weight: 600; cursor: pointer; transition: 0.2s; white-space: nowrap;
   }
-  .card-title em { color: var(--gold); font-style: italic; }
+  .tabs button:hover { color: var(--text); }
+  .tabs button.active { background: var(--gold); color: #000; }
 
-  .label {
-    display: block; font-size: 0.75rem; font-weight: 600; color: var(--gold);
-    text-transform: uppercase; letter-spacing: 1px; margin: 0 0 8px;
-  }
+  main { max-width: 1100px; margin: 22px auto 60px; padding: 0 16px; }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .card { padding: 22px; margin-bottom: 16px; }
+  .card-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .card-title { font-family: var(--serif); font-size: 22px; font-weight: 500; margin: 0; }
+  .card-title em { color: var(--gold); }
+  .grid-2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; }
+  .grid-2 > .card { margin-bottom: 0; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+  .stat { padding: 18px; }
+  .stat-label { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .stat-value { font-family: var(--serif); font-size: 30px; font-variant-numeric: tabular-nums; }
+  .stat-value.gold { color: var(--gold); }
+  .stat-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .pos { color: #7fd39a; }
+  .neg { color: #e58a8a; }
+  .muted { color: var(--muted); }
+
+  .label { display: block; font-size: 12px; color: var(--muted); margin: 0 0 8px; }
   .field { margin-top: 18px; }
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-  /* Účty */
-  .seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .seg button {
-    background: var(--field); border: 1px solid var(--border); color: var(--muted);
-    padding: 11px 0; border-radius: 8px; font: inherit; font-weight: 700; cursor: pointer;
-    transition: 0.2s;
+  .inp {
+    width: 100%; background: var(--field); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px; color: var(--text); padding: 11px 13px; font: inherit; font-size: 14px; outline: none; transition: 0.2s;
   }
-  .seg button:hover { border-color: var(--gold); color: var(--text); }
-  .seg button.active { background: var(--gold); border-color: var(--gold); color: #000; }
+  .inp:focus, .amount-box:focus-within { border-color: var(--gold); }
+  .inp::placeholder { color: var(--faint); }
 
-  /* Kategorie */
+  .seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; background: var(--field); padding: 4px; border-radius: 12px; }
+  .seg button {
+    background: transparent; border: 0; color: var(--muted); padding: 10px 0; border-radius: 9px;
+    font: inherit; font-weight: 600; cursor: pointer; transition: 0.2s;
+  }
+  .seg button.active { background: var(--gold); color: #000; }
+
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
   .chip {
-    background: var(--field); border: 1px solid var(--border); color: var(--text);
-    padding: 7px 13px; border-radius: 8px; font: inherit; font-size: 14px; cursor: pointer; transition: 0.2s;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: var(--text);
+    padding: 7px 13px; border-radius: 999px; font: inherit; font-size: 13px; cursor: pointer; transition: 0.2s;
   }
   .chip:hover { border-color: var(--gold); }
   .chip.active { background: var(--gold); border-color: var(--gold); color: #000; font-weight: 600; }
-  .hint { color: var(--faint); font-size: 14px; font-style: italic; }
+  .hint { color: var(--faint); font-style: italic; font-size: 13px; }
 
-  /* Vstupy */
-  input[type="text"], input[type="password"], .amount-box {
-    width: 100%; background: var(--field); border: 1px solid var(--border); border-radius: 8px;
-    color: var(--text); font: inherit; font-size: 15px; padding: 12px 14px; outline: none; transition: 0.2s;
+  .amount-box {
+    display: flex; align-items: center; background: var(--field); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px; padding: 6px 14px; transition: 0.2s;
   }
-  input[type="text"]:focus, input[type="password"]:focus, .amount-box:focus-within { border-color: var(--gold); }
-  input::placeholder { color: var(--faint); }
-
-  .amount-box { display: flex; align-items: center; padding: 6px 14px; }
   .amount-box input {
     flex: 1; min-width: 0; background: transparent; border: 0; color: var(--text);
-    font-family: var(--serif); font-size: 2rem; padding: 6px 0; outline: none;
+    font-family: var(--serif); font-size: 34px; padding: 6px 0; outline: none;
   }
-  .amount-box span { color: var(--gold); font-weight: 700; font-size: 0.95rem; }
+  .amount-box span { color: var(--gold); font-weight: 700; }
 
   button.submit {
-    width: 100%; margin-top: 22px; padding: 14px; border: 0; border-radius: 8px;
-    background: var(--gold); color: #000; font: inherit; font-weight: 700; font-size: 0.9rem;
+    width: 100%; margin-top: 22px; padding: 14px; border: 0; border-radius: 10px;
+    background: var(--gold); color: #000; font: inherit; font-weight: 700; font-size: 13px;
     text-transform: uppercase; letter-spacing: 1.5px; cursor: pointer; transition: 0.2s;
   }
   button.submit:hover { background: var(--gold-hover); }
   button.submit:disabled { opacity: 0.5; cursor: default; }
+  .form-wrap { max-width: 600px; margin: 0 auto; }
 
-  /* Přehled */
-  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
-  .stat { background: var(--field); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
-  .stat-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
-  .stat-value { font-family: var(--serif); font-size: 1.7rem; color: var(--text); font-variant-numeric: tabular-nums; }
-  .stat-value.gold { color: var(--gold); }
-
-  .chart-box { position: relative; height: 210px; margin-bottom: 18px; }
-  .legend { display: grid; gap: 6px; }
-  .legend-item {
-    display: flex; align-items: center; padding: 11px 12px; border: 1px solid var(--border);
-    border-radius: 8px; background: var(--field); font-size: 14px;
-  }
+  .chart { position: relative; height: 280px; }
+  .chart.short { height: 240px; }
+  .legend { display: grid; gap: 4px; margin-top: 14px; }
+  .legend-item { display: flex; align-items: center; padding: 10px 2px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .legend-item:last-child { border-bottom: 0; }
   .legend-item .dot { width: 9px; height: 9px; border-radius: 50%; margin-right: 12px; flex-shrink: 0; }
   .legend-item .name { flex: 1; }
   .legend-item .val { font-weight: 700; color: var(--gold); font-variant-numeric: tabular-nums; }
-  .empty { color: var(--faint); font-size: 14px; font-style: italic; text-align: center; padding: 14px 0; }
-  .counter { margin-top: 16px; text-align: center; color: var(--faint); font-size: 0.72rem; letter-spacing: 0.04em; line-height: 1.7; }
+  .empty { color: var(--faint); font-style: italic; text-align: center; padding: 14px 0; }
 
   .toast {
     position: fixed; left: 50%; bottom: 26px; transform: translate(-50%, 120px);
-    background: var(--gold); color: #000; padding: 12px 20px; border-radius: 8px;
-    font-size: 14px; font-weight: 700; opacity: 0; transition: 0.3s; pointer-events: none;
+    background: var(--gold); color: #000; padding: 12px 20px; border-radius: 10px;
+    font-weight: 700; opacity: 0; transition: 0.3s; pointer-events: none; z-index: 20;
   }
   .toast.show { transform: translate(-50%, 0); opacity: 1; }
+
+  .select-sm {
+    background: var(--field); border: 1px solid rgba(255,255,255,0.1); color: var(--text);
+    border-radius: 10px; padding: 8px 12px; font: inherit; font-size: 13px; outline: none; cursor: pointer;
+  }
+  .select-sm:focus { border-color: var(--gold); }
+  .pickers { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  @media (max-width: 820px) {
+    .grid-2 { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: 1fr; }
+    .topbar { flex-direction: column; align-items: stretch; }
+    .tabs button { flex: 1; }
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>Domácí <em>rozpočet</em></h1>
-    <p id="today"></p>
-  </header>
 
-  <form id="expenseForm" class="card">
-    <h2 class="card-title">Nový <em>výdaj</em></h2>
-
-    <span class="label">Účet</span>
-    <div class="seg" id="accounts">
-      <button type="button" data-acc="Společný">Společný</button>
-      <button type="button" data-acc="Pavel">Pavel</button>
-      <button type="button" data-acc="Gabi">Gabi</button>
-    </div>
-
-    <div class="field">
-      <span class="label">Kategorie</span>
-      <div class="chips" id="categoryChips"></div>
-    </div>
-
-    <div class="field">
-      <span class="label">Podkategorie</span>
-      <div class="chips" id="subChips"><span class="hint">Nejdřív vyber kategorii</span></div>
-    </div>
-
-    <div class="field">
-      <span class="label">Částka</span>
-      <div class="amount-box">
-        <input type="number" id="amount" placeholder="0" required step="any" inputmode="decimal">
-        <span>Kč</span>
-      </div>
-    </div>
-
-    <div class="field row">
-      <div>
-        <span class="label">Poznámka</span>
-        <input type="text" id="note" placeholder="Kaufland, nafta…">
-      </div>
-      <div>
-        <span class="label">PIN</span>
-        <input type="password" id="pinCode" placeholder="••••" required inputmode="numeric">
-      </div>
-    </div>
-
-    <button type="submit" class="submit" id="submitBtn">Odeslat výdaj</button>
-  </form>
-
-  <section class="card">
-    <h2 class="card-title">Tento <em>měsíc</em></h2>
-    <div class="stats">
-      <div class="stat">
-        <div class="stat-label">Celkem</div>
-        <div class="stat-value gold" id="monthTotal">—</div>
-      </div>
-      <div class="stat">
-        <div class="stat-label">Položek</div>
-        <div class="stat-value" id="itemCount">—</div>
-      </div>
-    </div>
-    <div class="chart-box"><canvas id="chart"></canvas></div>
-    <div class="legend" id="legend"></div>
-    <div class="counter" id="counter"></div>
-  </section>
+<div class="topbar glass">
+  <div class="brand">Domácí <em>rozpočet</em></div>
+  <div class="tabs" id="tabs">
+    <button type="button" class="active" data-view="new">Nový výdaj</button>
+    <button type="button" data-view="month">Měsíc</button>
+    <button type="button" data-view="compare">Porovnání</button>
+  </div>
 </div>
+
+<main>
+
+  <!-- NOVÝ VÝDAJ -->
+  <section class="view active" id="view-new">
+    <form id="expenseForm" class="glass card form-wrap">
+      <div class="card-head"><h2 class="card-title">Nový <em>výdaj</em></h2><span class="muted" id="today"></span></div>
+
+      <span class="label">Účet</span>
+      <div class="seg" id="accounts">
+        <button type="button" data-acc="Společný">Společný</button>
+        <button type="button" data-acc="Pavel">Pavel</button>
+        <button type="button" data-acc="Gabi">Gabi</button>
+      </div>
+
+      <div class="field">
+        <span class="label">Kategorie</span>
+        <div class="chips" id="categoryChips"></div>
+      </div>
+
+      <div class="field">
+        <span class="label">Podkategorie</span>
+        <div class="chips" id="subChips"><span class="hint">Nejdřív vyber kategorii</span></div>
+      </div>
+
+      <div class="field">
+        <span class="label">Částka</span>
+        <div class="amount-box">
+          <input type="number" id="amount" placeholder="0" required step="any" inputmode="decimal">
+          <span>Kč</span>
+        </div>
+      </div>
+
+      <div class="field row">
+        <div>
+          <span class="label">Poznámka</span>
+          <input class="inp" type="text" id="note" placeholder="Kaufland, nafta…">
+        </div>
+        <div>
+          <span class="label">PIN</span>
+          <input class="inp" type="password" id="pinCode" placeholder="••••" required inputmode="numeric">
+        </div>
+      </div>
+
+      <button type="submit" class="submit" id="submitBtn">Odeslat výdaj</button>
+    </form>
+  </section>
+
+  <!-- MĚSÍC -->
+  <section class="view" id="view-month">
+    <div class="card-head">
+      <h2 class="card-title">Přehled <em>měsíce</em></h2>
+      <select class="select-sm" id="monthSel"></select>
+    </div>
+
+    <div class="stats">
+      <div class="glass stat">
+        <div class="stat-label">Celkem utraceno</div>
+        <div class="stat-value gold" id="mTotal">—</div>
+      </div>
+      <div class="glass stat">
+        <div class="stat-label" id="mPrevLabel">Předchozí měsíc</div>
+        <div class="stat-value" id="mPrev">—</div>
+      </div>
+      <div class="glass stat">
+        <div class="stat-label">Změna oproti předchozímu</div>
+        <div class="stat-value" id="mChange">—</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="glass card">
+        <div class="card-head"><h3 class="card-title" style="font-size:18px">Kategorie</h3><span class="muted">podíl výdajů</span></div>
+        <div class="chart"><canvas id="chartMonth"></canvas></div>
+      </div>
+      <div class="glass card">
+        <div class="card-head"><h3 class="card-title" style="font-size:18px">Rozpis</h3></div>
+        <div class="legend" id="legend"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- POROVNÁNÍ -->
+  <section class="view" id="view-compare">
+    <div class="glass card">
+      <div class="card-head">
+        <h2 class="card-title">Vývoj <em>po měsících</em></h2>
+        <span class="muted">celkové výdaje</span>
+      </div>
+      <div class="chart"><canvas id="chartTrend"></canvas></div>
+    </div>
+
+    <div class="glass card">
+      <div class="card-head">
+        <h2 class="card-title">Srovnání <em>kategorií</em></h2>
+        <div class="pickers">
+          <select class="select-sm" id="cmpA"></select>
+          <span class="muted">vs</span>
+          <select class="select-sm" id="cmpB"></select>
+        </div>
+      </div>
+      <p class="muted" id="cmpSummary" style="margin:0 0 12px"></p>
+      <div class="chart"><canvas id="chartCompare"></canvas></div>
+    </div>
+  </section>
+
+</main>
 
 <div class="toast" id="toast"></div>
 
@@ -206,22 +283,39 @@
     "Volný čas": ["Sport", "Klavír", "Výlety", "Dovolená"],
     "Ostatní": ["Elektronika", "Oblečení", "Dárky", "Investice (XTB)", "Jiné"]
   };
-  // Zlatá a tlumené odstíny, ať graf ladí s webem
   const COLORS = ["#d4af37", "#f3e5ab", "#a0a0a0", "#9c7d1b", "#80640e", "#6b6b6b", "#c9a227", "#4a4a4a"];
   const COLOR_BY_CAT = {};
   Object.keys(CATEGORIES).forEach((c, i) => COLOR_BY_CAT[c] = COLORS[i % COLORS.length]);
 
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwUWMPw8rI3W8TL2nxPD4ue4blpo5dwmTb_5Wjh-n7UGRWJqYrvqu-z2RUqIb-iR5gs/exec";
+  const MONTHS_CZ = ["leden", "únor", "březen", "duben", "květen", "červen", "červenec", "srpen", "září", "říjen", "listopad", "prosinec"];
 
   const state = { account: "", category: "", subcategory: "" };
-  let chart = null;
+  let DATA = {};       // "YYYY-MM" -> { total, cats: { kategorie: částka } }
+  const charts = {};
 
   const $ = id => document.getElementById(id);
   const fmt = n => Math.round(n).toLocaleString("cs-CZ") + " Kč";
+  const nowKey = keyOf(new Date());
+
+  Chart.defaults.color = "#9a9aa0";
+  Chart.defaults.borderColor = "rgba(255,255,255,0.06)";
+  Chart.defaults.font.family = "-apple-system, Segoe UI, Roboto, Arial, sans-serif";
 
   $("today").textContent = new Date().toLocaleDateString("cs-CZ", { day: "numeric", month: "long", year: "numeric" });
 
-  // Výběr účtu
+  // ---------- Okna ----------
+  document.querySelectorAll("#tabs button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#tabs button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+      $("view-" + btn.dataset.view).classList.add("active");
+      Object.values(charts).forEach(c => c.resize());
+    });
+  });
+
+  // ---------- Formulář ----------
   document.querySelectorAll("#accounts button").forEach(btn => {
     btn.addEventListener("click", () => {
       document.querySelectorAll("#accounts button").forEach(b => b.classList.remove("active"));
@@ -230,7 +324,6 @@
     });
   });
 
-  // Kategorie
   Object.keys(CATEGORIES).forEach(cat => {
     const b = document.createElement("button");
     b.type = "button";
@@ -270,7 +363,6 @@
     setTimeout(() => t.classList.remove("show"), 2200);
   }
 
-  // Odeslání výdaje
   const submitBtn = $("submitBtn");
   $("expenseForm").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -294,7 +386,7 @@
     };
 
     try {
-      // no-cors: odpověď nelze přečíst, ověříme to přehledem níž
+      // no-cors: odpověď nelze přečíst, ověříme to přehledem
       await fetch(SCRIPT_URL, {
         method: "POST",
         mode: "no-cors",
@@ -314,7 +406,7 @@
     }
   });
 
-  // Načtení dat přes JSONP
+  // ---------- Data ----------
   function loadData() {
     const name = "cb_" + Date.now();
     const script = document.createElement("script");
@@ -327,15 +419,16 @@
     }
     function fail() {
       cleanup();
-      $("monthTotal").textContent = "—";
-      $("itemCount").textContent = "—";
+      DATA = {};
+      $("mTotal").textContent = "—";
       $("legend").innerHTML = '<div class="empty">Data se nepodařilo načíst</div>';
     }
 
     window[name] = rows => {
       cleanup();
       if (!Array.isArray(rows)) return fail();
-      renderFromRows(rows);
+      DATA = aggregate(rows);
+      renderAll();
     };
     script.onerror = fail;
     script.src = SCRIPT_URL + "?callback=" + name;
@@ -352,79 +445,155 @@
     return new Date(v);
   }
 
-  // Sjednotí staré názvy účtů
-  function normAccount(a) {
-    if (!a) return "";
-    const s = String(a);
-    if (s.startsWith("Společ")) return "Společný";
-    if (s.startsWith("Gab")) return "Gabi";
-    return s;
+  function keyOf(d) {
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+  }
+  function labelOf(k) {
+    const [y, m] = k.split("-");
+    return MONTHS_CZ[+m - 1] + " " + y;
+  }
+  function prevKey(k) {
+    let [y, m] = k.split("-").map(Number);
+    m--;
+    if (m === 0) { m = 12; y--; }
+    return y + "-" + String(m).padStart(2, "0");
   }
 
-  function renderFromRows(rows) {
-    const now = new Date();
-    const totals = {};
-    const counts = { "Společný": 0, "Pavel": 0, "Gabi": 0 };
-    let sum = 0;
-    let items = 0;
+  function aggregate(rows) {
+    const out = {};
     rows.forEach(r => {
       const d = parseDate(r[0]);
-      if (isNaN(d) || d.getMonth() !== now.getMonth() || d.getFullYear() !== now.getFullYear()) return;
+      if (isNaN(d)) return;
+      const k = keyOf(d);
       const amt = Number(r[1]) || 0;
       const cat = r[3] || "Ostatní";
-      const acc = normAccount(r[2]);
-      totals[cat] = (totals[cat] || 0) + amt;
-      sum += amt;
-      items++;
-      // Automatické trvalé platby se do počítadla nezapočítávají
-      const automatic = String(r[6] || "") === "Automaticky";
-      if (!automatic && counts[acc] !== undefined) counts[acc]++;
+      const m = out[k] || (out[k] = { total: 0, cats: {} });
+      m.total += amt;
+      m.cats[cat] = (m.cats[cat] || 0) + amt;
     });
-    $("itemCount").textContent = items;
-    renderSummary(totals, sum);
-    renderCounter(counts);
+    return out;
   }
 
-  function renderCounter(counts) {
-    $("counter").textContent =
-      "Ruční platby tento měsíc: Společný " + counts["Společný"] +
-      " · Pavel " + counts["Pavel"] +
-      " · Gabi " + counts["Gabi"];
+  // ---------- Vykreslení ----------
+  function renderAll() {
+    const keys = [...new Set([...Object.keys(DATA), nowKey])].sort().reverse();
+    fillSelect($("monthSel"), keys, $("monthSel").value || nowKey);
+    fillSelect($("cmpA"), keys, $("cmpA").value || prevKey(nowKey));
+    fillSelect($("cmpB"), keys, $("cmpB").value || nowKey);
+    renderMonth();
+    renderCompare();
   }
 
-  function renderSummary(totals, sum) {
-    $("monthTotal").textContent = fmt(sum);
-    const cats = Object.keys(totals).sort((a, b) => totals[b] - totals[a]);
-    const values = cats.length ? cats.map(c => totals[c]) : [1];
-    const colors = cats.length ? cats.map(c => COLOR_BY_CAT[c] || "#4a4a4a") : ["#333333"];
-    const labels = cats.length ? cats : ["Zatím nic"];
+  function fillSelect(sel, keys, selected) {
+    sel.innerHTML = keys.map(k => `<option value="${k}">${labelOf(k)}</option>`).join("");
+    sel.value = keys.includes(selected) ? selected : keys[0];
+  }
 
-    if (chart) {
-      chart.data.labels = labels;
-      chart.data.datasets[0].data = values;
-      chart.data.datasets[0].backgroundColor = colors;
-      chart.update();
+  function setChart(id, config) {
+    if (charts[id]) {
+      charts[id].data = config.data;
+      charts[id].options = config.options;
+      charts[id].update();
     } else {
-      chart = new Chart($("chart"), {
-        type: "doughnut",
-        data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 0 }] },
-        options: {
-          cutout: "72%",
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false }, tooltip: { enabled: cats.length > 0 } }
-        }
-      });
+      charts[id] = new Chart($(id), config);
+    }
+  }
+
+  function renderMonth() {
+    const k = $("monthSel").value || nowKey;
+    const m = DATA[k] || { total: 0, cats: {} };
+    const pk = prevKey(k);
+    const pt = (DATA[pk] || { total: 0 }).total;
+
+    $("mTotal").textContent = fmt(m.total);
+    $("mPrevLabel").textContent = "Předchozí: " + labelOf(pk);
+    $("mPrev").textContent = fmt(pt);
+
+    const change = $("mChange");
+    if (pt > 0) {
+      const diff = (m.total - pt) / pt * 100;
+      change.textContent = (diff > 0 ? "+" : "") + diff.toFixed(1).replace(".", ",") + " %";
+      change.className = "stat-value " + (diff > 0 ? "neg" : "pos");
+    } else {
+      change.textContent = "—";
+      change.className = "stat-value";
     }
 
-    $("legend").innerHTML = cats.length
+    const cats = Object.keys(m.cats).sort((a, b) => m.cats[b] - m.cats[a]);
+    const hasData = cats.length > 0;
+    setChart("chartMonth", {
+      type: "doughnut",
+      data: {
+        labels: hasData ? cats : ["Zatím nic"],
+        datasets: [{
+          data: hasData ? cats.map(c => m.cats[c]) : [1],
+          backgroundColor: hasData ? cats.map(c => COLOR_BY_CAT[c] || "#4a4a4a") : ["#2a2a2e"],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        cutout: "72%",
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } }
+      }
+    });
+
+    $("legend").innerHTML = hasData
       ? cats.map(c => `
           <div class="legend-item">
             <span class="dot" style="background:${COLOR_BY_CAT[c] || "#4a4a4a"}"></span>
             <span class="name">${c}</span>
-            <span class="val">${fmt(totals[c])}</span>
+            <span class="val">${fmt(m.cats[c])}</span>
           </div>`).join("")
       : '<div class="empty">Tento měsíc zatím žádné výdaje</div>';
   }
+
+  function renderCompare() {
+    const keys = Object.keys(DATA).sort();
+    setChart("chartTrend", {
+      type: "bar",
+      data: {
+        labels: keys.map(labelOf),
+        datasets: [{
+          data: keys.map(k => DATA[k].total),
+          backgroundColor: "#d4af37",
+          borderRadius: 6
+        }]
+      },
+      options: {
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { ticks: { callback: v => v.toLocaleString("cs-CZ") } } }
+      }
+    });
+
+    const a = $("cmpA").value;
+    const b = $("cmpB").value;
+    const ma = DATA[a] || { total: 0, cats: {} };
+    const mb = DATA[b] || { total: 0, cats: {} };
+    $("cmpSummary").textContent = labelOf(a) + ": " + fmt(ma.total) + "  ·  " + labelOf(b) + ": " + fmt(mb.total);
+
+    const cats = [...new Set([...Object.keys(ma.cats), ...Object.keys(mb.cats)])].sort();
+    setChart("chartCompare", {
+      type: "bar",
+      data: {
+        labels: cats,
+        datasets: [
+          { label: labelOf(a), data: cats.map(c => ma.cats[c] || 0), backgroundColor: "#6b6b6b", borderRadius: 6 },
+          { label: labelOf(b), data: cats.map(c => mb.cats[c] || 0), backgroundColor: "#d4af37", borderRadius: 6 }
+        ]
+      },
+      options: {
+        maintainAspectRatio: false,
+        plugins: { legend: { position: "bottom", labels: { boxWidth: 10 } } },
+        scales: { y: { ticks: { callback: v => v.toLocaleString("cs-CZ") } } }
+      }
+    });
+  }
+
+  $("monthSel").addEventListener("change", renderMonth);
+  $("cmpA").addEventListener("change", renderCompare);
+  $("cmpB").addEventListener("change", renderCompare);
 
   loadData();
 </script>
