@@ -7,125 +7,123 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
   :root {
-    --bg: #0d0e10;
-    --surface: #14161a;
-    --text: #ecebe6;
-    --muted: #8a8a84;
-    --faint: #5c5c57;
-    --line: #23262c;
-    --field: #101215;
-    --accent: #9fd6b8;
-    --accent-ink: #0d0e10;
-    --serif: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
-    --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    --bg: #0c0c0e;
+    --surface: #161618;
+    --surface-2: #1f1f22;
+    --text: #f2f2f2;
+    --muted: #8e8e93;
+    --faint: #56565c;
+    --line: #26262a;
+    --accent: #ff7a1a;
+    --accent-soft: rgba(255, 122, 26, 0.14);
+    --accent-ink: #0c0c0e;
+    --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
     background: var(--bg);
     color: var(--text);
-    font-family: var(--sans);
+    font-family: var(--font);
     font-size: 15px;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
   }
-  .wrap { max-width: 480px; margin: 0 auto; padding: 36px 20px 80px; }
+  .wrap { max-width: 460px; margin: 0 auto; padding: 28px 18px 80px; }
 
-  header { margin-bottom: 36px; }
-  .eyebrow {
-    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint);
+  header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 26px; }
+  header h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+  #today { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+  .badge {
+    width: 40px; height: 40px; border-radius: 12px; background: var(--surface);
+    display: grid; place-items: center; color: var(--accent); font-size: 18px;
   }
-  h1 {
-    margin: 6px 0 4px; font-family: var(--serif); font-weight: 400;
-    font-size: 30px; letter-spacing: -0.01em;
-  }
-  #today { margin: 0; color: var(--muted); font-size: 13px; }
 
-  section { border-top: 1px solid var(--line); padding: 26px 0; }
-  section:first-of-type { border-top: 0; padding-top: 0; }
-  .sec-title {
-    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+  /* Účet: segmentovaný přepínač */
+  .seg {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;
+    background: var(--surface); border-radius: 14px; padding: 4px;
+  }
+  .seg button {
+    background: transparent; border: 0; padding: 11px 0; border-radius: 10px;
+    font: inherit; font-weight: 600; color: var(--muted); cursor: pointer; transition: 0.15s;
+  }
+  .seg button.active { background: var(--accent); color: var(--accent-ink); }
+
+  .card {
+    background: var(--surface); border-radius: 18px; padding: 20px; margin-bottom: 14px;
+  }
+  .card-title {
+    font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
     color: var(--muted); margin: 0 0 16px;
   }
 
-  /* Účet: textové záložky */
-  .tabs { display: flex; gap: 22px; border-bottom: 1px solid var(--line); }
-  .tabs button {
-    background: none; border: 0; padding: 0 0 12px; margin-bottom: -1px;
-    font: inherit; color: var(--muted); cursor: pointer;
-    border-bottom: 2px solid transparent; transition: color 0.15s;
-  }
-  .tabs button:hover { color: var(--text); }
-  .tabs button.active { color: var(--text); border-bottom-color: var(--accent); }
+  .label { display: block; font-size: 12px; color: var(--muted); margin: 0 0 8px; }
+  .field { margin-top: 18px; }
 
-  /* Chipy */
+  /* Kategorie a podkategorie */
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
   .chip {
-    background: transparent; border: 1px solid var(--line); color: var(--text);
-    padding: 7px 13px; border-radius: 6px; font: inherit; font-size: 14px; cursor: pointer;
-    transition: all 0.15s;
+    background: var(--surface-2); border: 1px solid transparent; color: var(--text);
+    padding: 8px 14px; border-radius: 999px; font: inherit; font-size: 14px; cursor: pointer;
+    transition: 0.15s;
   }
   .chip:hover { border-color: var(--faint); }
-  .chip.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .chip.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
   .hint { color: var(--faint); font-size: 14px; }
 
   /* Částka */
-  .amount-wrap { position: relative; border-bottom: 1px solid var(--line); }
-  .amount-wrap input {
-    background: transparent; border: 0; border-radius: 0; padding: 6px 40px 10px 0;
-    font-family: var(--serif); font-size: 44px; color: var(--text);
+  .amount-box {
+    display: flex; align-items: center; background: var(--surface-2); border-radius: 14px;
+    padding: 4px 16px; border: 1px solid transparent; transition: border-color 0.15s;
   }
-  .amount-wrap input:focus { box-shadow: none; }
-  .amount-wrap::after {
-    content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px;
-    background: var(--accent); transform: scaleX(0); transition: transform 0.25s;
+  .amount-box:focus-within { border-color: var(--accent); }
+  .amount-box input {
+    flex: 1; background: transparent; border: 0; color: var(--text); font: inherit;
+    font-size: 30px; font-weight: 700; padding: 10px 0; outline: none; min-width: 0;
   }
-  .amount-wrap:focus-within::after { transform: scaleX(1); }
-  .amount-wrap span {
-    position: absolute; right: 0; top: 50%; transform: translateY(-60%);
-    color: var(--muted); font-size: 16px; pointer-events: none;
-  }
+  .amount-box span { color: var(--muted); font-weight: 600; }
 
-  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  .field { margin-top: 22px; }
-  .label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
-
-  input[type="text"], input[type="password"], input[type="number"] {
-    width: 100%; padding: 11px 0; border: 0; border-bottom: 1px solid var(--line);
-    background: transparent; color: var(--text); font: inherit; font-size: 15px;
-    border-radius: 0; transition: border-color 0.15s;
+  input[type="text"], input[type="password"] {
+    width: 100%; padding: 13px 14px; background: var(--surface-2); border: 1px solid transparent;
+    border-radius: 12px; color: var(--text); font: inherit; font-size: 15px; outline: none;
+    transition: border-color 0.15s;
   }
   input::placeholder { color: var(--faint); }
-  input:focus { outline: none; border-bottom-color: var(--accent); }
+  input:focus { border-color: var(--accent); }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
   button.submit {
-    width: 100%; margin-top: 30px; padding: 15px; border: 0; border-radius: 8px;
-    background: var(--accent); color: var(--accent-ink); font: inherit; font-weight: 600;
+    width: 100%; margin-top: 18px; padding: 15px; border: 0; border-radius: 14px;
+    background: var(--accent); color: var(--accent-ink); font: inherit; font-weight: 700;
     font-size: 15px; cursor: pointer; transition: opacity 0.15s;
   }
-  button.submit:hover { opacity: 0.9; }
+  button.submit:hover { opacity: 0.92; }
   button.submit:disabled { opacity: 0.5; cursor: default; }
 
   /* Přehled */
-  .total-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 22px; }
-  .total { font-family: var(--serif); font-size: 40px; margin: 0; letter-spacing: -0.01em; font-weight: 400; }
-  .total-sub { color: var(--muted); font-size: 13px; }
-  .chart-box { position: relative; height: 200px; margin-bottom: 22px; }
-  .legend { display: grid; gap: 0; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+  .stat { background: var(--surface-2); border-radius: 14px; padding: 14px; }
+  .stat-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .stat-value { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .stat-value.accent { color: var(--accent); }
+
+  .chart-box { position: relative; height: 200px; margin-bottom: 18px; }
+  .legend { display: grid; gap: 4px; }
   .legend-item {
-    display: flex; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); font-size: 14px;
+    display: flex; align-items: center; padding: 12px; border-radius: 12px; background: var(--surface-2);
+    font-size: 14px; margin-bottom: 6px;
   }
-  .legend-item:first-child { border-top: 0; }
-  .legend-item .dot { width: 8px; height: 8px; border-radius: 2px; margin-right: 12px; flex-shrink: 0; }
-  .legend-item .name { flex: 1; color: var(--text); }
-  .legend-item .val { color: var(--text); font-variant-numeric: tabular-nums; }
-  .empty { color: var(--faint); font-size: 14px; padding: 12px 0; }
-  .counter { margin-top: 20px; text-align: right; color: var(--faint); font-size: 11px; line-height: 1.6; }
+  .legend-item .dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 12px; flex-shrink: 0; }
+  .legend-item .name { flex: 1; }
+  .legend-item .val { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .empty { color: var(--faint); font-size: 14px; text-align: center; padding: 16px 0; }
+  .counter { margin-top: 14px; text-align: center; color: var(--faint); font-size: 11px; line-height: 1.6; }
 
   .toast {
-    position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 120px);
-    background: var(--text); color: var(--bg); padding: 11px 18px; border-radius: 8px;
-    font-size: 14px; opacity: 0; transition: 0.3s; pointer-events: none;
+    position: fixed; left: 50%; bottom: 26px; transform: translate(-50%, 120px);
+    background: var(--text); color: var(--bg); padding: 12px 18px; border-radius: 12px;
+    font-size: 14px; font-weight: 600; opacity: 0; transition: 0.3s; pointer-events: none;
   }
   .toast.show { transform: translate(-50%, 0); opacity: 1; }
 </style>
@@ -133,16 +131,18 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="eyebrow">Rozpočet</div>
-    <h1>Domácí rozpočet</h1>
-    <p id="today"></p>
+    <div>
+      <h1>Domácí rozpočet</h1>
+      <p id="today"></p>
+    </div>
+    <div class="badge">◎</div>
   </header>
 
   <form id="expenseForm">
-    <section>
-      <h2 class="sec-title">Nový výdaj</h2>
+    <div class="card">
+      <h2 class="card-title">Nový výdaj</h2>
 
-      <div class="tabs" id="accounts">
+      <div class="seg" id="accounts">
         <button type="button" data-acc="Společný">Společný</button>
         <button type="button" data-acc="Pavel">Pavel</button>
         <button type="button" data-acc="Gabi">Gabi</button>
@@ -160,13 +160,13 @@
 
       <div class="field">
         <span class="label">Částka</span>
-        <div class="amount-wrap">
+        <div class="amount-box">
           <input type="number" id="amount" placeholder="0" required step="any" inputmode="decimal">
           <span>Kč</span>
         </div>
       </div>
 
-      <div class="row field">
+      <div class="field row">
         <div>
           <span class="label">Poznámka</span>
           <input type="text" id="note" placeholder="Kaufland, nafta…">
@@ -178,19 +178,25 @@
       </div>
 
       <button type="submit" class="submit" id="submitBtn">Odeslat výdaj</button>
-    </section>
+    </div>
   </form>
 
-  <section>
-    <h2 class="sec-title">Tento měsíc</h2>
-    <div class="total-row">
-      <p class="total" id="monthTotal">—</p>
-      <span class="total-sub">celkem</span>
+  <div class="card">
+    <h2 class="card-title">Tento měsíc</h2>
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-label">Celkem</div>
+        <div class="stat-value accent" id="monthTotal">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Položek</div>
+        <div class="stat-value" id="itemCount">—</div>
+      </div>
     </div>
     <div class="chart-box"><canvas id="chart"></canvas></div>
     <div class="legend" id="legend"></div>
     <div class="counter" id="counter"></div>
-  </section>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -206,7 +212,7 @@
     "Volný čas": ["Sport", "Klavír", "Výlety", "Dovolená"],
     "Ostatní": ["Elektronika", "Oblečení", "Dárky", "Investice (XTB)", "Jiné"]
   };
-  const COLORS = ["#9fd6b8", "#e6b87d", "#8fb0d9", "#d98f8f", "#b8a3d9", "#d9cf8f", "#7fb5b0", "#c9c4b8"];
+  const COLORS = ["#ff7a1a", "#ffa657", "#8e8e93", "#d4d4d8", "#c2410c", "#6b6b72", "#fb923c", "#3f3f46"];
   const COLOR_BY_CAT = {};
   Object.keys(CATEGORIES).forEach((c, i) => COLOR_BY_CAT[c] = COLORS[i % COLORS.length]);
 
@@ -327,6 +333,7 @@
     function fail() {
       cleanup();
       $("monthTotal").textContent = "—";
+      $("itemCount").textContent = "—";
       $("legend").innerHTML = '<div class="empty">Data se nepodařilo načíst</div>';
     }
 
@@ -364,6 +371,7 @@
     const totals = {};
     const counts = { "Společný": 0, "Pavel": 0, "Gabi": 0 };
     let sum = 0;
+    let items = 0;
     rows.forEach(r => {
       const d = parseDate(r[0]);
       if (isNaN(d) || d.getMonth() !== now.getMonth() || d.getFullYear() !== now.getFullYear()) return;
@@ -372,10 +380,12 @@
       const acc = normAccount(r[2]);
       totals[cat] = (totals[cat] || 0) + amt;
       sum += amt;
+      items++;
       // Automatické trvalé platby se do počítadla nezapočítávají
       const automatic = String(r[6] || "") === "Automaticky";
       if (!automatic && counts[acc] !== undefined) counts[acc]++;
     });
+    $("itemCount").textContent = items;
     renderSummary(totals, sum);
     renderCounter(counts);
   }
@@ -391,7 +401,7 @@
     $("monthTotal").textContent = fmt(sum);
     const cats = Object.keys(totals).sort((a, b) => totals[b] - totals[a]);
     const values = cats.length ? cats.map(c => totals[c]) : [1];
-    const colors = cats.length ? cats.map(c => COLOR_BY_CAT[c] || "#5c5c57") : ["#23262c"];
+    const colors = cats.length ? cats.map(c => COLOR_BY_CAT[c] || "#3f3f46") : ["#26262a"];
     const labels = cats.length ? cats : ["Zatím nic"];
 
     if (chart) {
@@ -404,7 +414,7 @@
         type: "doughnut",
         data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 0 }] },
         options: {
-          cutout: "78%",
+          cutout: "72%",
           maintainAspectRatio: false,
           plugins: { legend: { display: false }, tooltip: { enabled: cats.length > 0 } }
         }
@@ -414,7 +424,7 @@
     $("legend").innerHTML = cats.length
       ? cats.map(c => `
           <div class="legend-item">
-            <span class="dot" style="background:${COLOR_BY_CAT[c] || "#5c5c57"}"></span>
+            <span class="dot" style="background:${COLOR_BY_CAT[c] || "#3f3f46"}"></span>
             <span class="name">${c}</span>
             <span class="val">${fmt(totals[c])}</span>
           </div>`).join("")
