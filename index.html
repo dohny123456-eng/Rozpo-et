@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="cs">
+<html lang="cs" class="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,37 +8,51 @@
 <style>
   :root {
     --bg: #f4f5f7; --card: #ffffff; --text: #111827; --muted: #6b7280;
-    --line: #e5e7eb; --accent: #4f46e5; --accent-hover: #4338ca;
-    --accent-soft: #eef2ff; --radius: 16px;
+    --line: #e5e7eb; --input: #ffffff; --chip-hover: #c7d2fe;
+    --accent: #4f46e5; --accent-hover: #4338ca; --accent-soft: #eef2ff;
+    --seg: #f3f4f6; --seg-active: #ffffff; --counter: #9ca3af;
+    --toast-bg: #111827; --toast-text: #ffffff; --shadow: rgba(0,0,0,0.04);
+  }
+  html.dark {
+    --bg: #0b0d12; --card: #161a22; --text: #e5e7eb; --muted: #9ca3af;
+    --line: #2a2f3a; --input: #0f1218; --chip-hover: #4338ca;
+    --accent: #6366f1; --accent-hover: #818cf8; --accent-soft: #1e1b4b;
+    --seg: #0f1218; --seg-active: #242a36; --counter: #6b7280;
+    --toast-bg: #e5e7eb; --toast-text: #111827; --shadow: rgba(0,0,0,0.4);
   }
   * { box-sizing: border-box; }
   body {
     margin: 0; background: var(--bg); color: var(--text);
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-family: Arial, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
   .wrap { max-width: 520px; margin: 0 auto; padding: 24px 16px 56px; display: grid; gap: 16px; }
+  header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
   header h1 { margin: 0; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em; }
   header p { margin: 4px 0 0; color: var(--muted); font-size: 0.9rem; }
-  .card { background: var(--card); border-radius: var(--radius); padding: 20px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04); }
+  .theme-btn {
+    border: 1px solid var(--line); background: var(--card); color: var(--text);
+    border-radius: 999px; width: 40px; height: 40px; font-size: 1.1rem; cursor: pointer; flex-shrink: 0;
+  }
+  .card { background: var(--card); border-radius: 16px; padding: 20px;
+    box-shadow: 0 1px 2px var(--shadow), 0 4px 16px var(--shadow); }
   .card h2 { margin: 0 0 16px; font-size: 1rem; font-weight: 600; }
   .field { margin-bottom: 20px; }
   .label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--muted); margin-bottom: 8px; }
-  .seg { display: grid; grid-template-columns: repeat(3, 1fr); background: #f3f4f6;
+  .seg { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--seg);
     border-radius: 12px; padding: 4px; gap: 4px; }
   .seg button { border: 0; background: transparent; padding: 10px 0; border-radius: 9px;
     font: inherit; font-weight: 500; color: var(--muted); cursor: pointer; transition: 0.15s; }
-  .seg button.active { background: #fff; color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .seg button.active { background: var(--seg-active); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-  .chip { border: 1px solid var(--line); background: #fff; padding: 8px 14px; border-radius: 999px;
+  .chip { border: 1px solid var(--line); background: var(--input); padding: 8px 14px; border-radius: 999px;
     font: inherit; font-size: 0.9rem; color: var(--text); cursor: pointer; transition: 0.15s; }
-  .chip:hover { border-color: #c7d2fe; }
+  .chip:hover { border-color: var(--chip-hover); }
   .chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
   .hint { color: var(--muted); font-size: 0.85rem; }
   input[type="text"], input[type="password"], input[type="number"] {
     width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px;
-    font: inherit; font-size: 1rem; background: #fff; color: var(--text); transition: 0.15s;
+    font: inherit; font-size: 1rem; background: var(--input); color: var(--text); transition: 0.15s;
   }
   input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
   .amount-wrap { position: relative; }
@@ -61,17 +75,21 @@
   .legend-item .name { flex: 1; }
   .legend-item .val { font-weight: 600; font-variant-numeric: tabular-nums; }
   .empty { text-align: center; color: var(--muted); font-size: 0.9rem; padding: 24px 0; }
+  .counter { text-align: right; color: var(--counter); font-size: 0.7rem; margin-top: 12px; line-height: 1.5; }
   .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 120px);
-    background: #111827; color: #fff; padding: 12px 18px; border-radius: 12px; font-size: 0.9rem;
-    opacity: 0; transition: 0.3s; pointer-events: none; }
+    background: var(--toast-bg); color: var(--toast-text); padding: 12px 18px; border-radius: 12px;
+    font-size: 0.9rem; opacity: 0; transition: 0.3s; pointer-events: none; }
   .toast.show { transform: translate(-50%, 0); opacity: 1; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>Domácí rozpočet</h1>
-    <p id="today"></p>
+    <div>
+      <h1>Domácí rozpočet</h1>
+      <p id="today"></p>
+    </div>
+    <button class="theme-btn" id="themeBtn" type="button" title="Přepnout režim">☀</button>
   </header>
 
   <form class="card" id="expenseForm">
@@ -80,9 +98,9 @@
     <div class="field">
       <span class="label">Účet</span>
       <div class="seg" id="accounts">
-        <button type="button" class="active" data-acc="Společná">Společná</button>
+        <button type="button" data-acc="Společný">Společný</button>
         <button type="button" data-acc="Pavel">Pavel</button>
-        <button type="button" data-acc="Gabča">Gabča</button>
+        <button type="button" data-acc="Gabi">Gabi</button>
       </div>
     </div>
 
@@ -126,6 +144,7 @@
     </div>
     <div class="chart-box"><canvas id="chart"></canvas></div>
     <div class="legend" id="legend"></div>
+    <div class="counter" id="counter"></div>
   </section>
 </div>
 
@@ -133,28 +152,41 @@
 
 <script>
   const CATEGORIES = {
-    "Jídlo": ["Obchod", "Restaurace", "Hospoda", "Kafíčko"],
-    "Drogerie": ["Čistění", "Praní", "Kosmetika"],
+    "Jídlo": ["Obchod", "Restaurace", "Kavárna", "Hospoda", "Dovoz"],
+    "Drogerie": ["Kosmetika", "Čištění", "Praní"],
     "Kočky": ["Krmivo", "Toaleta", "Veterina"],
     "Doprava": ["Palivo", "Servis", "Dálnice", "Pojištění", "Mytí"],
-    "Domácnost": ["Nábytek", "Rostliny", "Dekorace", "Nádobí", "Textílie"],
+    "Domácnost": ["Rostliny", "Dekorace", "Nádobí", "Textílie", "Terasa", "Servis"],
     "Zdraví": ["Doktor", "Zubař", "Lékárna", "Vitamíny"],
-    "Volný čas": ["Sport", "Výlety", "Dovolená"],
+    "Volný čas": ["Sport", "Klavír", "Výlety", "Dovolená"],
     "Ostatní": ["Elektronika", "Oblečení", "Dárky", "Investice (XTB)", "Jiné"]
   };
-  const COLORS = ["#4f46e5", "#10b981", "#f59e0b", "#ef4444", "#06b6d4", "#8b5cf6", "#ec4899", "#84cc16"];
+  const COLORS = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#06b6d4", "#8b5cf6", "#ec4899", "#84cc16"];
   const COLOR_BY_CAT = {};
   Object.keys(CATEGORIES).forEach((c, i) => COLOR_BY_CAT[c] = COLORS[i % COLORS.length]);
 
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwUWMPw8rI3W8TL2nxPD4ue4blpo5dwmTb_5Wjh-n7UGRWJqYrvqu-z2RUqIb-iR5gs/exec";
 
-  const state = { account: "Společná", category: "", subcategory: "" };
+  const state = { account: "", category: "", subcategory: "" };
   let chart = null;
 
   const $ = id => document.getElementById(id);
   const fmt = n => Math.round(n).toLocaleString("cs-CZ") + " Kč";
 
   $("today").textContent = new Date().toLocaleDateString("cs-CZ", { day: "numeric", month: "long", year: "numeric" });
+
+  // Režim (výchozí noční)
+  function applyTheme(dark) {
+    document.documentElement.classList.toggle("dark", dark);
+    $("themeBtn").textContent = dark ? "☀" : "☾";
+  }
+  applyTheme(localStorage.getItem("theme") !== "light");
+  $("themeBtn").addEventListener("click", () => {
+    const dark = !document.documentElement.classList.contains("dark");
+    localStorage.setItem("theme", dark ? "dark" : "light");
+    applyTheme(dark);
+    if (chart) chart.update();
+  });
 
   // Výběr účtu
   document.querySelectorAll("#accounts button").forEach(btn => {
@@ -209,16 +241,11 @@
   const submitBtn = $("submitBtn");
   $("expenseForm").addEventListener("submit", async (e) => {
     e.preventDefault();
-    if (!state.category || !state.subcategory) {
-      toast("Vyber kategorii a podkategorii");
-      return;
-    }
+    if (!state.account) { toast("Vyber účet: Společný, Pavel nebo Gabi"); return; }
+    if (!state.category || !state.subcategory) { toast("Vyber kategorii a podkategorii"); return; }
     const amount = $("amount").value;
     const pin = $("pinCode").value;
-    if (!amount || !pin) {
-      toast("Vyplň částku a PIN");
-      return;
-    }
+    if (!amount || !pin) { toast("Vyplň částku a PIN"); return; }
 
     submitBtn.disabled = true;
     submitBtn.textContent = "Odesílám…";
@@ -229,7 +256,8 @@
       subcategory: state.subcategory,
       amount: amount,
       note: $("note").value,
-      pin: pin
+      pin: pin,
+      device: navigator.userAgent.slice(0, 200)
     };
 
     try {
@@ -253,7 +281,7 @@
     }
   });
 
-  // Načtení dat přes JSONP (obejde CORS)
+  // Načtení dat přes JSONP
   function loadData() {
     const name = "cb_" + Date.now();
     const script = document.createElement("script");
@@ -280,39 +308,58 @@
     document.body.appendChild(script);
   }
 
-  // Převede datum z tabulky: Date, ISO text nebo český text "6.11.2026 13:33"
+  // Datum z tabulky: Date, ISO text nebo český text "6.11.2026 13:33"
   function parseDate(v) {
     if (v instanceof Date) return v;
     if (typeof v === "string") {
       const m = v.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/);
-      if (m) {
-        return new Date(+m[3], +m[2] - 1, +m[1], +(m[4] || 0), +(m[5] || 0));
-      }
+      if (m) return new Date(+m[3], +m[2] - 1, +m[1], +(m[4] || 0), +(m[5] || 0));
     }
     return new Date(v);
+  }
+
+  // Sjednotí staré názvy účtů
+  function normAccount(a) {
+    if (!a) return "";
+    const s = String(a);
+    if (s.startsWith("Společ")) return "Společný";
+    if (s.startsWith("Gab")) return "Gabi";
+    return s;
   }
 
   function renderFromRows(rows) {
     const now = new Date();
     const totals = {};
+    const counts = { "Společný": 0, "Pavel": 0, "Gabi": 0 };
     let sum = 0;
     rows.forEach(r => {
       const d = parseDate(r[0]);
-      // Hlavička a prázdné řádky se přeskočí, protože nejsou platné datum
       if (isNaN(d) || d.getMonth() !== now.getMonth() || d.getFullYear() !== now.getFullYear()) return;
       const amt = Number(r[1]) || 0;
       const cat = r[3] || "Ostatní";
+      const acc = normAccount(r[2]);
       totals[cat] = (totals[cat] || 0) + amt;
       sum += amt;
+      // Automatické trvalé platby se do počítadla nezapočítávají
+      const automatic = String(r[6] || "") === "Automaticky";
+      if (!automatic && counts[acc] !== undefined) counts[acc]++;
     });
     renderSummary(totals, sum);
+    renderCounter(counts);
+  }
+
+  function renderCounter(counts) {
+    $("counter").textContent =
+      "Ruční platby tento měsíc: Společný " + counts["Společný"] +
+      " · Pavel " + counts["Pavel"] +
+      " · Gabi " + counts["Gabi"];
   }
 
   function renderSummary(totals, sum) {
     $("monthTotal").textContent = fmt(sum);
     const cats = Object.keys(totals).sort((a, b) => totals[b] - totals[a]);
     const values = cats.length ? cats.map(c => totals[c]) : [1];
-    const colors = cats.length ? cats.map(c => COLOR_BY_CAT[c] || "#9ca3af") : ["#e5e7eb"];
+    const colors = cats.length ? cats.map(c => COLOR_BY_CAT[c] || "#9ca3af") : ["#2a2f3a"];
     const labels = cats.length ? cats : ["Zatím nic"];
 
     if (chart) {
