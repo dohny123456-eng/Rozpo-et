@@ -13,15 +13,15 @@
     <style>
         :root {
             --bg: #050608;
-            --glass-card: rgba(18, 20, 26, 0.42);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --glass-border-hover: rgba(255, 255, 255, 0.22);
+            --glass-card: rgba(12, 14, 18, 0.18);
+            --glass-border: rgba(255, 255, 255, 0.16);
+            --glass-border-hover: rgba(255, 255, 255, 0.3);
             --text-primary: #ffffff;
-            --text-secondary: #8e8e93;
+            --text-secondary: #9a9aa0;
             --text-muted: #6b6b70;
             --error: #ff453a;
-            --pill-bg: rgba(255, 255, 255, 0.05);
-            --pill-border: rgba(255, 255, 255, 0.1);
+            --pill-bg: rgba(255, 255, 255, 0.04);
+            --pill-border: rgba(255, 255, 255, 0.12);
             --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", sans-serif;
         }
 
@@ -41,7 +41,7 @@
             flex-direction: column;
         }
 
-        /* Černobílé pozadí: fotka bg.jpg, pokud chybí, zůstane tmavý přechod */
+        /* Černobílé pozadí z bg.jpg, pokud chybí, zůstane tmavý přechod */
         body::before {
             content: "";
             position: fixed;
@@ -51,18 +51,19 @@
                 url("bg.jpg") center / cover no-repeat,
                 radial-gradient(1200px 700px at 50% -10%, rgba(80, 85, 100, 0.35), transparent 70%),
                 linear-gradient(135deg, #2a2a2e, #0b0b0d);
-            filter: grayscale(100%) brightness(0.75) contrast(1.05);
+            filter: grayscale(100%) brightness(0.9) contrast(1.05);
         }
 
-        /* Skleněné karty: fotka se za nimi rozmaže */
+        /* Skleněné karty: jen 1px rámeček, žádný vnitřní světelný proužek */
         .glass {
             background: var(--glass-card);
             border: 1px solid var(--glass-border);
-            backdrop-filter: blur(36px) saturate(160%);
-            -webkit-backdrop-filter: blur(36px) saturate(160%);
+            background-clip: padding-box;
+            backdrop-filter: blur(12px) saturate(120%);
+            -webkit-backdrop-filter: blur(12px) saturate(120%);
             border-radius: 26px;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 24px 50px rgba(0, 0, 0, 0.5);
-            transition: border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            transition: border-color 0.3s ease;
         }
         .glass:hover { border-color: var(--glass-border-hover); }
 
@@ -72,10 +73,10 @@
             max-width: 900px; width: calc(100% - 32px); margin: 20px auto 0;
             display: flex; align-items: center; justify-content: space-between; gap: 16px;
             padding: 8px 12px 8px 20px; border-radius: 999px;
-            background: rgba(15, 17, 23, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(35px) saturate(180%);
-            -webkit-backdrop-filter: blur(35px) saturate(180%);
+            background: rgba(10, 12, 16, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            backdrop-filter: blur(12px) saturate(120%);
+            -webkit-backdrop-filter: blur(12px) saturate(120%);
         }
         .brand {
             font-size: 16px; font-weight: 400; letter-spacing: -0.02em;
@@ -87,8 +88,8 @@
             box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
         }
         .tabs {
-            display: flex; gap: 6px; background: rgba(0, 0, 0, 0.3); border-radius: 999px;
-            padding: 4px; border: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex; gap: 6px; background: rgba(0, 0, 0, 0.2); border-radius: 999px;
+            padding: 4px; border: 1px solid rgba(255, 255, 255, 0.1);
         }
         .tabs button {
             background: transparent; border: 0; color: var(--text-secondary);
@@ -154,9 +155,7 @@
             font: inherit; font-size: 14px; outline: none;
             transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .inp:focus {
-            border-color: rgba(255, 255, 255, 0.3); background: rgba(255, 255, 255, 0.08);
-        }
+        .inp:focus { border-color: rgba(255, 255, 255, 0.3); background: rgba(255, 255, 255, 0.07); }
         .inp::placeholder { color: var(--text-muted); }
         .inp.error {
             border-color: var(--error) !important;
@@ -171,7 +170,7 @@
 
         .seg {
             display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
-            background: rgba(0, 0, 0, 0.25); border: 1px solid var(--pill-border);
+            background: rgba(0, 0, 0, 0.2); border: 1px solid var(--pill-border);
             padding: 6px; border-radius: 999px;
         }
         .seg button {
@@ -182,10 +181,10 @@
         }
         .seg button:hover { color: var(--text-primary); }
         .seg button.active {
-            background: rgba(255, 255, 255, 0.12); color: var(--text-primary);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            font-weight: 500;
+            background: rgba(255, 255, 255, 0.14); color: var(--text-primary);
+            border: 1px solid rgba(255, 255, 255, 0.22); font-weight: 500;
         }
+        .seg .ico { width: 16px; height: 16px; fill: currentColor; flex-shrink: 0; }
 
         .chips { display: flex; flex-wrap: wrap; gap: 8px; }
         .chip {
@@ -195,8 +194,7 @@
         }
         .chip:hover { border-color: rgba(255, 255, 255, 0.25); color: var(--text-primary); }
         .chip.active {
-            background: var(--text-primary); border-color: var(--text-primary); color: #000;
-            font-weight: 500;
+            background: var(--text-primary); border-color: var(--text-primary); color: #000; font-weight: 500;
         }
         .hint {
             color: var(--text-muted); font-size: 13px; padding: 6px 0;
@@ -204,11 +202,11 @@
         }
 
         .amount-box {
-            display: flex; align-items: center; background: rgba(0, 0, 0, 0.25);
+            display: flex; align-items: center; background: rgba(0, 0, 0, 0.2);
             border: 1px solid var(--pill-border); border-radius: 24px; padding: 8px 24px;
             transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .amount-box:focus-within { border-color: rgba(255, 255, 255, 0.3); background: rgba(255, 255, 255, 0.04); }
+        .amount-box:focus-within { border-color: rgba(255, 255, 255, 0.3); background: rgba(255, 255, 255, 0.05); }
         .amount-box input {
             flex: 1; min-width: 0; background: transparent; border: 0; color: var(--text-primary);
             font-size: 38px; font-weight: 300; letter-spacing: -0.03em; padding: 6px 0; outline: none;
@@ -233,7 +231,7 @@
         .legend { display: grid; gap: 8px; margin-top: 16px; max-height: 250px; overflow-y: auto; padding-right: 4px; }
         .legend-item {
             display: flex; align-items: center; padding: 10px 12px; border-radius: 14px;
-            background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);
             transition: background 0.2s;
         }
         .legend-item:hover { background: rgba(255, 255, 255, 0.07); }
@@ -244,7 +242,7 @@
         .rec-list { display: grid; gap: 8px; }
         .rec-item {
             display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px;
-            background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);
         }
         .rec-main { flex: 1; min-width: 0; }
         .rec-name { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -266,18 +264,17 @@
 
         .toast {
             position: fixed; left: 50%; bottom: 32px; transform: translate(-50%, 120px) scale(0.9);
-            background: rgba(30, 32, 42, 0.92); border: 1px solid rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(40px); color: var(--text-primary); padding: 14px 28px;
+            background: rgba(20, 22, 28, 0.85); border: 1px solid rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(16px); color: var(--text-primary); padding: 14px 28px;
             border-radius: 999px; font-size: 13px; opacity: 0;
             transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: none; z-index: 1000;
             display: flex; align-items: center; gap: 10px;
         }
-        .toast.error-toast { border-color: rgba(255, 69, 58, 0.4); background: rgba(45, 18, 20, 0.95); color: #ffb3b0; }
+        .toast.error-toast { border-color: rgba(255, 69, 58, 0.5); color: #ffb3b0; }
         .toast.show { transform: translate(-50%, 0) scale(1); opacity: 1; }
 
-        /* Menu měsíce: větší než ostatní */
         .select-sm {
-            background: rgba(0, 0, 0, 0.35); border: 1px solid var(--pill-border); color: var(--text-primary);
+            background: rgba(0, 0, 0, 0.25); border: 1px solid var(--pill-border); color: var(--text-primary);
             border-radius: 999px; padding: 8px 16px; font: inherit; font-size: 13px; outline: none;
             cursor: pointer; transition: all 0.25s; appearance: none; -webkit-appearance: none;
         }
@@ -328,9 +325,18 @@
 
             <span class="label">Účet</span>
             <div class="seg" id="accounts">
-                <button type="button" data-acc="Společný"><i class="fa-solid fa-house-user"></i> Společný</button>
-                <button type="button" data-acc="Pavel"><i class="fa-solid fa-person"></i> Pavel</button>
-                <button type="button" data-acc="Gabi"><i class="fa-solid fa-person-dress"></i> Gabi</button>
+                <button type="button" data-acc="Společný">
+                    <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5V21h-6v-6h-6v6H3z"/></svg>
+                    Společný
+                </button>
+                <button type="button" data-acc="Pavel">
+                    <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="4" r="2.5"/><path d="M8.5 8h7a1 1 0 0 1 1 1v6h-1.6v6.5h-2.8V15h-.2v6.5H8.1V15H6.5V9a1 1 0 0 1 1-1z"/><path d="M5.5 8.5h2v6.5h-2zM16.5 8.5h2v6.5h-2z"/></svg>
+                    Pavel
+                </button>
+                <button type="button" data-acc="Gabi">
+                    <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="4" r="2.5"/><path d="M9.5 8h5l1.8 1.5 2.2 8H6l2.2-8z"/><path d="M10.2 17.5h3.6V22h-3.6z"/></svg>
+                    Gabi
+                </button>
             </div>
 
             <div class="field">
@@ -451,9 +457,7 @@
         "Ostatní": ["Elektronika", "Oblečení", "Dárky", "Investice (XTB)", "Jiné"]
     };
 
-    // Barvy pro kategorie v koláčích (monochrom)
     const COLORS = ["#ffffff", "#8e8e93", "#636366", "#48484a", "#3a3a3c", "#2c2c2e", "#d1d1d6", "#a1a1a6"];
-    // Barvy pro srovnání měsíců (vícebarevné)
     const PALETTE = ["#60a5fa", "#34d399", "#fbbf24", "#f87171", "#a78bfa", "#f472b6"];
     const COLOR_BY_CAT = {};
     Object.keys(CATEGORIES).forEach((c, i) => COLOR_BY_CAT[c] = COLORS[i % COLORS.length]);
@@ -463,24 +467,23 @@
     const MAX_CMP = 6;
 
     const state = { account: "", category: "", subcategory: "" };
-    let DATA = {};        // "YYYY-MM" -> { total, cats }
-    let RAW = [];         // řádky z "List 1"
-    let RECURRING = [];   // řádky z "Pravidelné"
-    let cmpSel = [];      // vybrané měsíce pro srovnání
+    let DATA = {};
+    let RAW = [];
+    let RECURRING = [];
+    let cmpSel = [];
     const charts = {};
 
     const $ = id => document.getElementById(id);
     const fmt = n => Math.round(n).toLocaleString("cs-CZ") + " Kč";
     const nowKey = keyOf(new Date());
 
-    Chart.defaults.color = "#8e8e93";
+    Chart.defaults.color = "#9a9aa0";
     Chart.defaults.borderColor = "rgba(255, 255, 255, 0.06)";
     Chart.defaults.font.family = "-apple-system, SF Pro Text, Inter, sans-serif";
     Chart.defaults.font.weight = "300";
 
     $("today").textContent = new Date().toLocaleDateString("cs-CZ", { day: "numeric", month: "long", year: "numeric" });
 
-    // Přepínání oken: po zobrazení se grafy překreslí
     document.querySelectorAll("#tabs button").forEach(btn => {
         btn.addEventListener("click", () => {
             document.querySelectorAll("#tabs button").forEach(b => b.classList.remove("active"));
@@ -491,7 +494,6 @@
         });
     });
 
-    // Účet
     document.querySelectorAll("#accounts button").forEach(btn => {
         btn.addEventListener("click", () => {
             document.querySelectorAll("#accounts button").forEach(b => b.classList.remove("active"));
@@ -500,7 +502,6 @@
         });
     });
 
-    // Kategorie
     Object.keys(CATEGORIES).forEach(cat => {
         const b = document.createElement("button");
         b.type = "button";
@@ -541,7 +542,6 @@
         setTimeout(() => t.classList.remove("show"), 2800);
     }
 
-    // Odeslání výdaje
     const submitBtn = $("submitBtn");
     $("expenseForm").addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -594,7 +594,6 @@
         }
     });
 
-    // JSONP (obejde CORS)
     function jsonp(params, onOk, onFail) {
         const name = "cb_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
         const script = document.createElement("script");
@@ -676,6 +675,10 @@
         return out;
     }
 
+    function allKeys() {
+        return [...new Set([...Object.keys(DATA), nowKey])].sort().reverse();
+    }
+
     function renderAll() {
         const keys = allKeys();
         fillSelect($("monthSel"), keys, $("monthSel").value || nowKey);
@@ -685,10 +688,6 @@
         renderMonth();
         renderRecurring();
         renderCompare();
-    }
-
-    function allKeys() {
-        return [...new Set([...Object.keys(DATA), nowKey])].sort().reverse();
     }
 
     function fillSelect(sel, keys, selected) {
@@ -790,7 +789,6 @@
         $("recTotal").innerHTML = `Měsíčně celkem: <b>${fmt(sum)}</b>`;
     }
 
-    // Tlačítka pro výběr měsíců do srovnání
     function renderCmpChips(keys) {
         const wrap = $("cmpChips");
         wrap.innerHTML = "";
@@ -814,7 +812,6 @@
     }
 
     function renderCompare() {
-        // Vývoj po měsících
         const keys = Object.keys(DATA).sort();
         setChart("chartTrend", {
             type: "bar",
@@ -834,7 +831,6 @@
             }
         });
 
-        // Srovnání vybraných měsíců po kategoriích
         const sel = cmpSel.slice().sort();
         const catSet = new Set();
         sel.forEach(k => Object.keys((DATA[k] || { cats: {} }).cats).forEach(c => catSet.add(c)));
