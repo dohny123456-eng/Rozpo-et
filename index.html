@@ -27,10 +27,7 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-        html {
-            -webkit-text-size-adjust: 100%;
-            text-size-adjust: 100%;
-        }
+        html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
         body {
             min-height: 100vh;
@@ -234,16 +231,51 @@
 
         .chart { position: relative; height: 280px; width: 100%; }
 
-        .legend { display: grid; gap: 8px; margin-top: 16px; max-height: 250px; overflow-y: auto; padding-right: 4px; }
+        /* Rozpis kategorií: tenký průhledný scrollbar */
+        .legend {
+            display: grid; gap: 8px; margin-top: 16px; max-height: 300px; overflow-y: auto;
+            padding-right: 6px; scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+        }
+        .legend::-webkit-scrollbar { width: 4px; }
+        .legend::-webkit-scrollbar-track { background: transparent; }
+        .legend::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.22); border-radius: 999px; }
+
         .legend-item {
             display: flex; align-items: center; padding: 10px 12px; border-radius: 14px;
             background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);
-            transition: background 0.2s;
+            transition: background 0.2s; cursor: pointer;
         }
         .legend-item:hover { background: rgba(255, 255, 255, 0.07); }
         .legend-item .dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 14px; flex-shrink: 0; }
         .legend-item .name { flex: 1; font-size: 13px; color: var(--text-secondary); }
-        .legend-item .val { font-weight: 500; color: var(--text-primary); font-variant-numeric: tabular-nums; font-size: 14px; }
+        .legend-item .val { font-weight: 500; color: var(--text-primary); font-variant-numeric: tabular-nums; font-size: 14px; margin-right: 10px; }
+        .legend-item .chev { font-size: 10px; color: var(--text-muted); }
+
+        /* Detail kategorie */
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--pill-bg); border: 1px solid var(--pill-border); color: var(--text-primary);
+            border-radius: 999px; padding: 9px 18px; font: inherit; font-size: 13px; cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .back-btn:hover { border-color: rgba(255, 255, 255, 0.3); }
+        .detail-total { text-align: right; }
+        .detail-total .stat-label { margin-bottom: 4px; }
+        .detail-total .stat-value { font-size: 26px; }
+        .detail-cats { margin-bottom: 22px; }
+        .tx-list { display: grid; gap: 8px; }
+        .tx {
+            display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: 14px;
+            background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .tx-date {
+            font-size: 12px; color: var(--text-secondary); min-width: 84px; font-variant-numeric: tabular-nums;
+        }
+        .tx-main { flex: 1; min-width: 0; }
+        .tx-sub { font-size: 14px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tx-note { font-size: 12px; color: var(--text-secondary); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tx-acc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+        .tx-amount { font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
         .rec-list { display: grid; gap: 8px; }
         .rec-item {
@@ -279,12 +311,6 @@
         .toast.error-toast { border-color: rgba(255, 69, 58, 0.5); color: #ffb3b0; }
         .toast.show { transform: translate(-50%, 0) scale(1); opacity: 1; }
 
-        .pickers { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-        .select-sm {
-            background: var(--pill-bg); border: 1px solid var(--pill-border); color: var(--text-primary);
-            border-radius: 999px; padding: 8px 16px; font: inherit; font-size: 16px; outline: none;
-        }
-
         .dd { position: relative; }
         .dd-btn {
             display: flex; align-items: center; gap: 14px;
@@ -304,7 +330,10 @@
             border: 1px solid rgba(255, 255, 255, 0.16);
             backdrop-filter: blur(14px) saturate(120%);
             -webkit-backdrop-filter: blur(14px) saturate(120%);
+            scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
         }
+        .dd-list::-webkit-scrollbar { width: 4px; }
+        .dd-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.22); border-radius: 999px; }
         .dd.open .dd-list { display: block; }
         .dd-item {
             padding: 10px 16px; border-radius: 12px; font-size: 14px; cursor: pointer;
@@ -312,6 +341,12 @@
         }
         .dd-item:hover { background: rgba(255, 255, 255, 0.08); color: var(--text-primary); }
         .dd-item.active { color: var(--text-primary); font-weight: 500; }
+
+        .pickers { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .select-sm {
+            background: var(--pill-bg); border: 1px solid var(--pill-border); color: var(--text-primary);
+            border-radius: 999px; padding: 8px 16px; font: inherit; font-size: 16px; outline: none;
+        }
 
         /* Vstupní pole vždy 16px, jinak iOS při psaní přibližuje stránku */
         input, select, textarea { font-size: 16px !important; }
@@ -342,6 +377,7 @@
 
 <main>
 
+    <!-- NOVÝ VÝDAJ -->
     <section class="view active" id="view-new">
         <form id="expenseForm" class="glass card form-wrap">
             <div class="card-head">
@@ -398,6 +434,7 @@
         </form>
     </section>
 
+    <!-- MĚSÍC -->
     <section class="view" id="view-month">
         <div class="card-head">
             <h2 class="card-title">Přehled <span>měsíce</span></h2>
@@ -436,6 +473,7 @@
             <div class="glass card">
                 <div class="card-head">
                     <h3 class="card-title small">Rozpis</h3>
+                    <span class="muted">klikni pro detail</span>
                 </div>
                 <div class="legend" id="legend"></div>
             </div>
@@ -451,6 +489,30 @@
         </div>
     </section>
 
+    <!-- DETAIL KATEGORIE -->
+    <section class="view" id="view-detail">
+        <div class="card-head">
+            <button type="button" class="back-btn" id="backBtn"><i class="fa-solid fa-arrow-left"></i> Zpět</button>
+            <span class="muted" id="detailMonthLabel"></span>
+        </div>
+
+        <div class="glass card">
+            <div class="card-head">
+                <h2 class="card-title" id="detailTitle">—</h2>
+                <div class="detail-total">
+                    <div class="stat-label">Celkem v kategorii</div>
+                    <div class="stat-value primary" id="detailTotal">—</div>
+                </div>
+            </div>
+
+            <span class="label">Další kategorie tento měsíc</span>
+            <div class="chips detail-cats" id="detailCats"></div>
+
+            <div class="tx-list" id="txList"></div>
+        </div>
+    </section>
+
+    <!-- POROVNÁNÍ -->
     <section class="view" id="view-compare">
         <div class="glass card">
             <div class="card-head">
@@ -480,10 +542,10 @@
         "Jídlo": ["Obchod", "Restaurace", "Kavárna", "Hospoda", "Dovoz"],
         "Drogerie": ["Kosmetika", "Čištění", "Praní"],
         "Kočky": ["Krmivo", "Toaleta", "Veterina"],
-        "Doprava": ["Palivo", "Servis", "Dálnice", "Pojištění", "Mytí"],
+        "Doprava": ["Palivo", "Servis", "Dálnice", "Pojištění", "Mytí", "Parkování"],
         "Domácnost": ["Rostliny", "Dekorace", "Nádobí", "Textílie", "Terasa", "Servis"],
         "Zdraví": ["Doktor", "Zubař", "Lékárna", "Vitamíny"],
-        "Volný čas": ["Sport", "Klavír", "Výlety", "Dovolená"],
+        "Volný čas": ["Sport", "Klavír", "Výlety", "Dovolená", "Kultura"],
         "Ostatní": ["Elektronika", "Oblečení", "Dárky", "Investice (XTB)", "Jiné"]
     };
 
@@ -502,6 +564,7 @@
     let RECURRING = [];
     let cmpSel = [];
     let curMonth = null;
+    let detailCat = null;
     const charts = {};
 
     const $ = id => document.getElementById(id);
@@ -516,16 +579,23 @@
 
     $("today").textContent = new Date().toLocaleDateString("cs-CZ", { day: "numeric", month: "long", year: "numeric" });
 
+    // ---------- Okna ----------
+    function showView(name) {
+        document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+        $("view-" + name).classList.add("active");
+        const tabName = name === "detail" ? "month" : name;
+        document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("active", b.dataset.view === tabName));
+        setTimeout(() => Object.values(charts).forEach(c => { c.resize(); c.update(); }), 60);
+        window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+    }
+
     document.querySelectorAll("#tabs button").forEach(btn => {
-        btn.addEventListener("click", () => {
-            document.querySelectorAll("#tabs button").forEach(b => b.classList.remove("active"));
-            btn.classList.add("active");
-            document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
-            $("view-" + btn.dataset.view).classList.add("active");
-            setTimeout(() => Object.values(charts).forEach(c => { c.resize(); c.update(); }), 60);
-        });
+        btn.addEventListener("click", () => showView(btn.dataset.view));
     });
 
+    $("backBtn").addEventListener("click", () => showView("month"));
+
+    // ---------- Formulář ----------
     document.querySelectorAll("#accounts button").forEach(btn => {
         btn.addEventListener("click", () => {
             document.querySelectorAll("#accounts button").forEach(b => b.classList.remove("active"));
@@ -626,6 +696,7 @@
         }
     });
 
+    // ---------- Data ----------
     function jsonp(params, onOk, onFail) {
         const name = "cb_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
         const script = document.createElement("script");
@@ -691,6 +762,9 @@
         if (s.startsWith("Gab")) return "Gabi";
         return s;
     }
+    function fmtDate(d) {
+        return d.getDate() + ". " + (d.getMonth() + 1) + ". " + d.getFullYear();
+    }
 
     function aggregate(rows) {
         const out = {};
@@ -711,6 +785,7 @@
         return [...new Set([...Object.keys(DATA), nowKey])].sort().reverse();
     }
 
+    // ---------- Výběr měsíce ----------
     function buildMonthDd(keys) {
         const list = $("ddList");
         list.innerHTML = keys.map(k =>
@@ -741,6 +816,7 @@
         if (!$("monthDd").contains(e.target)) $("monthDd").classList.remove("open");
     });
 
+    // ---------- Vykreslení ----------
     function renderAll() {
         const keys = allKeys();
         if (!keys.includes(curMonth)) curMonth = keys[0];
@@ -802,12 +878,72 @@
 
         $("legend").innerHTML = hasData
             ? cats.map(c => `
-                <div class="legend-item">
+                <div class="legend-item" data-cat="${c}">
                     <span class="dot" style="background:${COLOR_BY_CAT[c] || "#8e8e93"}"></span>
                     <span class="name">${c}</span>
                     <span class="val">${fmt(m.cats[c])}</span>
+                    <i class="fa-solid fa-chevron-right chev"></i>
                 </div>`).join("")
             : '<div class="empty"><i class="fa-regular fa-folder-open"></i> Tento měsíc zatím žádné výdaje</div>';
+    }
+
+    // Klik na kategorii v Rozpisu otevře detail
+    $("legend").addEventListener("click", e => {
+        const item = e.target.closest(".legend-item");
+        if (item) openDetail(item.dataset.cat);
+    });
+
+    function openDetail(cat) {
+        detailCat = cat;
+        renderDetail();
+        showView("detail");
+    }
+
+    function renderDetail() {
+        const month = curMonth;
+        $("detailMonthLabel").textContent = labelOf(month);
+        $("detailTitle").textContent = detailCat;
+
+        const monthRows = RAW.filter(r => {
+            const d = parseDate(r[0]);
+            return !isNaN(d) && keyOf(d) === month;
+        });
+
+        // Ostatní kategorie tohoto měsíce jako přepínače
+        const cats = {};
+        monthRows.forEach(r => {
+            const c = r[3] || "Ostatní";
+            cats[c] = (cats[c] || 0) + (Number(r[1]) || 0);
+        });
+        const catList = Object.keys(cats).sort((a, b) => cats[b] - cats[a]);
+        $("detailCats").innerHTML = catList.map(c =>
+            `<button type="button" class="chip${c === detailCat ? " active" : ""}" data-c="${c}">${c}</button>`
+        ).join("");
+        $("detailCats").querySelectorAll(".chip").forEach(b => {
+            b.addEventListener("click", () => { detailCat = b.dataset.c; renderDetail(); });
+        });
+
+        // Transakce vybrané kategorie, nejnovější nahoře
+        const rows = monthRows
+            .filter(r => (r[3] || "Ostatní") === detailCat)
+            .map(r => ({ date: parseDate(r[0]), amt: Number(r[1]) || 0, acc: normAccount(r[2]), sub: r[4] || "", note: r[5] || "" }))
+            .sort((a, b) => b.date - a.date);
+
+        const total = rows.reduce((s, x) => s + x.amt, 0);
+        $("detailTotal").textContent = fmt(total);
+
+        $("txList").innerHTML = rows.length
+            ? rows.map(x => `
+                <div class="tx">
+                    <div class="tx-date">${fmtDate(x.date)}</div>
+                    <div class="tx-main">
+                        <div class="tx-sub">${x.sub || "—"}</div>
+                        ${x.note ? `<div class="tx-note">${x.note}</div>` : ""}
+                        <div class="tx-acc">${x.acc}</div>
+                    </div>
+                    <div class="tx-amount">${fmt(x.amt)}</div>
+                </div>`).join("")
+            : '<div class="empty"><i class="fa-regular fa-folder-open"></i> V této kategorii zatím žádné výdaje</div>';
     }
 
     function renderRecurring() {
@@ -918,8 +1054,7 @@
         });
     }
 
-    $("monthSel") && $("monthSel").addEventListener("change", () => { renderMonth(); renderRecurring(); });
-
+    // Po opuštění pole vrátí stránku do normálního měřítka
     document.querySelectorAll("input").forEach(el => {
         el.addEventListener("blur", () => {
             setTimeout(() => {
