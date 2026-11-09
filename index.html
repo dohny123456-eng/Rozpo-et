@@ -23,7 +23,12 @@
             --pill-bg: rgba(255, 255, 255, 0.03);
             --pill-border: rgba(255, 255, 255, 0.12);
             --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", sans-serif;
+            --bg-img: url("bg1.jpg");
         }
+
+        /* Výběr pozadí: data-bg="1" = bg1.jpg, data-bg="2" = bg2.jpg */
+        body[data-bg="1"] { --bg-img: url("bg1.jpg"); }
+        body[data-bg="2"] { --bg-img: url("bg2.jpg"); }
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
@@ -46,14 +51,14 @@
             overflow-x: hidden;
         }
 
-        /* Černobílé pozadí z bg.jpg, pokud chybí, zůstane tmavý přechod */
+        /* Černobílé pozadí, pokud fotka chybí, zůstane tmavý přechod */
         body::before {
             content: "";
             position: fixed;
             inset: 0;
             z-index: -1;
             background:
-                url("bg.jpg") center / cover no-repeat,
+                var(--bg-img) center / cover no-repeat,
                 radial-gradient(1200px 700px at 50% -10%, rgba(80, 85, 100, 0.35), transparent 70%),
                 linear-gradient(135deg, #2a2a2e, #0b0b0d);
             filter: grayscale(100%) brightness(0.9) contrast(1.05);
@@ -74,7 +79,7 @@
         .topbar {
             position: sticky; top: 20px; z-index: 100;
             max-width: 900px; width: calc(100% - 32px); margin: 20px auto 0;
-            display: flex; align-items: center; justify-content: space-between; gap: 16px;
+            display: flex; align-items: center; justify-content: space-between; gap: 12px;
             padding: 8px 12px 8px 20px; border-radius: 999px;
             background: rgba(10, 12, 16, 0.25);
             border: 1px solid rgba(255, 255, 255, 0.14);
@@ -90,6 +95,7 @@
             width: 8px; height: 8px; border-radius: 50%; background: var(--text-primary);
             box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
         }
+        .top-right { display: flex; align-items: center; gap: 8px; }
         .tabs {
             display: flex; gap: 6px; background: rgba(0, 0, 0, 0.2); border-radius: 999px;
             padding: 4px; border: 1px solid rgba(255, 255, 255, 0.1);
@@ -105,6 +111,16 @@
             background: var(--text-primary); color: #000; font-weight: 500;
             box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
         }
+
+        /* Nenápadné tlačítko pro změnu pozadí */
+        .bg-btn {
+            width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+            background: transparent; border: 1px solid rgba(255, 255, 255, 0.12);
+            color: var(--text-secondary); font-size: 12px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .bg-btn:hover { color: var(--text-primary); border-color: rgba(255, 255, 255, 0.3); }
 
         main { max-width: 900px; width: 100%; margin: 32px auto 60px; padding: 0 16px; flex: 1; }
 
@@ -246,6 +262,8 @@
         }
         .legend-item:hover { background: rgba(255, 255, 255, 0.07); }
         .legend-item .dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 14px; flex-shrink: 0; }
+        .legend-item .dot.rec-dot { background: transparent !important; border: 1px solid rgba(255, 255, 255, 0.7); }
+        .legend-item.rec-row { border-color: rgba(255, 255, 255, 0.16); }
         .legend-item .name { flex: 1; font-size: 13px; color: var(--text-secondary); }
         .legend-item .val { font-weight: 500; color: var(--text-primary); font-variant-numeric: tabular-nums; font-size: 14px; margin-right: 10px; }
         .legend-item .chev { font-size: 10px; color: var(--text-muted); }
@@ -353,23 +371,27 @@
             .stats { grid-template-columns: 1fr; }
             .topbar { flex-direction: column; align-items: stretch; padding: 12px; border-radius: 28px; }
             .brand { justify-content: center; }
+            .top-right { justify-content: center; }
             .tabs button { flex: 1; justify-content: center; }
             .row { grid-template-columns: 1fr; }
         }
     </style>
 </head>
-<body>
+<body data-bg="1">
 
 <header class="topbar">
     <div class="brand">
         <div class="brand-dot"></div>
         Domácí <span>rozpočet</span>
     </div>
-    <nav class="tabs" id="tabs">
-        <button type="button" class="active" data-view="new"><i class="fa-solid fa-plus"></i> Nový výdaj</button>
-        <button type="button" data-view="month"><i class="fa-solid fa-chart-pie"></i> Měsíc</button>
-        <button type="button" data-view="compare"><i class="fa-solid fa-chart-simple"></i> Porovnání</button>
-    </nav>
+    <div class="top-right">
+        <nav class="tabs" id="tabs">
+            <button type="button" class="active" data-view="new"><i class="fa-solid fa-plus"></i> Nový výdaj</button>
+            <button type="button" data-view="month"><i class="fa-solid fa-chart-pie"></i> Měsíc</button>
+            <button type="button" data-view="compare"><i class="fa-solid fa-chart-simple"></i> Porovnání</button>
+        </nav>
+        <button type="button" class="bg-btn" id="bgBtn" title="Změnit pozadí"><i class="fa-solid fa-image"></i></button>
+    </div>
 </header>
 
 <main>
@@ -462,8 +484,8 @@
         <div class="grid-2">
             <div class="glass card">
                 <div class="card-head">
-                    <h3 class="card-title small">Kategorie</h3>
-                    <span class="muted">podíl výdajů</span>
+                    <h3 class="card-title small">Podíl výdajů</h3>
+                    <span class="muted">všechny kategorie</span>
                 </div>
                 <div class="chart"><canvas id="chartMonth"></canvas></div>
             </div>
@@ -486,7 +508,7 @@
         </div>
     </section>
 
-    <!-- DETAIL KATEGORIE -->
+    <!-- DETAIL KATEGORIE / TRVALÉ PLATBY -->
     <section class="view" id="view-detail">
         <div class="card-head">
             <button type="button" class="back-btn" id="backBtn"><i class="fa-solid fa-arrow-left"></i> Zpět</button>
@@ -497,12 +519,12 @@
             <div class="card-head">
                 <h2 class="card-title" id="detailTitle">—</h2>
                 <div class="detail-total">
-                    <div class="stat-label">Celkem v kategorii</div>
+                    <div class="stat-label">Celkem</div>
                     <div class="stat-value primary" id="detailTotal">—</div>
                 </div>
             </div>
 
-            <span class="label">Další kategorie tento měsíc</span>
+            <span class="label">Další položky tento měsíc</span>
             <div class="chips detail-cats" id="detailCats"></div>
 
             <div class="tx-list" id="txList"></div>
@@ -541,16 +563,27 @@
         "Kočky": ["Krmivo", "Toaleta", "Veterina"],
         "Doprava": ["Palivo", "Servis", "Dálnice", "Pojištění", "Mytí", "Parkování"],
         "Domácnost": ["Rostliny", "Dekorace", "Nádobí", "Textílie", "Terasa", "Servis"],
+        "Bydlení": ["Hypotéka", "Energie", "Internet", "Pojištění bytu", "Servis"],
         "Zdraví": ["Doktor", "Zubař", "Lékárna", "Vitamíny"],
         "Volný čas": ["Sport", "Klavír", "Výlety", "Dovolená", "Kultura"],
-        "Ostatní": ["Elektronika", "Oblečení", "Dárky", "Investice (XTB)", "Jiné"]
+        "Investice": ["XTB", "Penzijní", "Spořící"],
+        "Předplatné": ["Tarif", "Netflix", "iCloud", "Spotify", "Lightroom", "Jiné"],
+        "Ostatní": ["Elektronika", "Oblečení", "Dárky", "Jiné"]
     };
 
     // Jemné barevné nádechy pro koláč (ztlumené, hodí se k tmavému pozadí)
-    const COLORS = ["#8fb4e8", "#9fd4b5", "#e8d08f", "#e8a5a5", "#b9a6e8", "#8fd3d8", "#e6b5d4", "#c6d88f"];
+    const COLORS = ["#8fb4e8", "#9fd4b5", "#e8d08f", "#e8a5a5", "#b9a6e8", "#8fd3d8", "#e6b5d4", "#c6d88f", "#d4b48f", "#a8c8d8", "#d8a8b8"];
     const PALETTE = ["#60a5fa", "#34d399", "#fbbf24", "#f87171", "#a78bfa", "#f472b6"];
     const COLOR_BY_CAT = {};
     Object.keys(CATEGORIES).forEach((c, i) => COLOR_BY_CAT[c] = COLORS[i % COLORS.length]);
+
+    const REC_KEY = "__rec__";   // interní klíč pro řádek "Trvalé platby"
+    const REC_PREFIX = "trvalá: ";
+
+    // Pořadí účtů v seznamu pravidelných plateb
+    const ACC_RANK = { "Společný": 0, "Pavel": 1, "Gabi": 2 };
+    // Pořadí položek: stejné položky u Pavla a Gabi jsou na stejné pozici
+    const REC_ORDER = ["Pojištění bytu", "Energie", "Internet", "Hypotéka", "iCloud", "Penzijní spoření", "Spotify", "Lightroom", "Netflix"];
 
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwUWMPw8rI3W8TL2nxPD4ue4blpo5dwmTb_5Wjh-n7UGRWJqYrvqu-z2RUqIb-iR5gs/exec";
     const MONTHS_CZ = ["leden", "únor", "březen", "duben", "květen", "červen", "červenec", "srpen", "září", "říjen", "listopad", "prosinec"];
@@ -577,11 +610,27 @@
 
     $("today").textContent = new Date().toLocaleDateString("cs-CZ", { day: "numeric", month: "long", year: "numeric" });
 
+    // ---------- Pozadí: přepínání mezi dvěma fotkami ----------
+    const BG_KEY = "bgMode";
+    function applyBg(n) {
+        document.body.dataset.bg = n;
+        localStorage.setItem(BG_KEY, n);
+    }
+    applyBg(localStorage.getItem(BG_KEY) === "2" ? "2" : "1");
+    $("bgBtn").addEventListener("click", () => {
+        applyBg(document.body.dataset.bg === "1" ? "2" : "1");
+    });
+
     // Příspěvek na společné se do přehledu nepočítá (je to převod, ne výdaj)
     function isExcluded(r) {
         return String(r[3] || "") === "Společné"
             || String(r[4] || "") === "Příspěvek"
             || String(r[5] || "").indexOf("Příspěvek na společné") >= 0;
+    }
+
+    // Automatická trvalá platba (zapsaná skriptem)
+    function isRecRow(r) {
+        return String(r[5] || "").indexOf(REC_PREFIX) === 0;
     }
 
     // ---------- Okna ----------
@@ -845,6 +894,14 @@
         }
     }
 
+    function monthRowsOf(k) {
+        return RAW.filter(r => {
+            if (isExcluded(r)) return false;
+            const d = parseDate(r[0]);
+            return !isNaN(d) && keyOf(d) === k;
+        });
+    }
+
     function renderMonth() {
         const k = curMonth;
         const m = DATA[k] || { total: 0, cats: {} };
@@ -882,7 +939,10 @@
             options: { cutout: "78%", maintainAspectRatio: false, plugins: { legend: { display: false } } }
         });
 
-        $("legend").innerHTML = hasData
+        // Součet trvalých plateb tohoto měsíce (už je obsažen v kategoriích výše)
+        const recSum = monthRowsOf(k).filter(isRecRow).reduce((s, r) => s + (Number(r[1]) || 0), 0);
+
+        let html = hasData
             ? cats.map(c => `
                 <div class="legend-item" data-cat="${c}">
                     <span class="dot" style="background:${COLOR_BY_CAT[c] || "#8e8e93"}"></span>
@@ -890,7 +950,20 @@
                     <span class="val">${fmt(m.cats[c])}</span>
                     <i class="fa-solid fa-chevron-right chev"></i>
                 </div>`).join("")
-            : '<div class="empty"><i class="fa-regular fa-folder-open"></i> Tento měsíc zatím žádné výdaje</div>';
+            : "";
+
+        if (recSum > 0) {
+            html += `
+                <div class="legend-item rec-row" data-cat="${REC_KEY}">
+                    <span class="dot rec-dot"></span>
+                    <span class="name">Trvalé platby</span>
+                    <span class="val">${fmt(recSum)}</span>
+                    <i class="fa-solid fa-chevron-right chev"></i>
+                </div>`;
+        }
+
+        $("legend").innerHTML = html
+            || '<div class="empty"><i class="fa-regular fa-folder-open"></i> Tento měsíc zatím žádné výdaje</div>';
     }
 
     $("legend").addEventListener("click", e => {
@@ -906,32 +979,49 @@
 
     function renderDetail() {
         const month = curMonth;
+        const isRec = detailCat === REC_KEY;
         $("detailMonthLabel").textContent = labelOf(month);
-        $("detailTitle").textContent = detailCat;
+        $("detailTitle").textContent = isRec ? "Trvalé platby" : detailCat;
 
-        const monthRows = RAW.filter(r => {
-            if (isExcluded(r)) return false;
-            const d = parseDate(r[0]);
-            return !isNaN(d) && keyOf(d) === month;
-        });
+        const monthRows = monthRowsOf(month);
+        const recRows = monthRows.filter(isRecRow);
 
         const cats = {};
         monthRows.forEach(r => {
             const c = r[3] || "Ostatní";
             cats[c] = (cats[c] || 0) + (Number(r[1]) || 0);
         });
-        const catList = Object.keys(cats).sort((a, b) => cats[b] - cats[a]);
-        $("detailCats").innerHTML = catList.map(c =>
-            `<button type="button" class="chip${c === detailCat ? " active" : ""}" data-c="${c}">${c}</button>`
+
+        // Přepínače: Trvalé platby (pokud jsou) a pak kategorie měsíce
+        const chipList = [];
+        if (recRows.length) chipList.push({ key: REC_KEY, label: "Trvalé platby" });
+        Object.keys(cats).sort((a, b) => cats[b] - cats[a]).forEach(c => chipList.push({ key: c, label: c }));
+
+        $("detailCats").innerHTML = chipList.map(x =>
+            `<button type="button" class="chip${x.key === detailCat ? " active" : ""}" data-c="${x.key}">${x.label}</button>`
         ).join("");
         $("detailCats").querySelectorAll(".chip").forEach(b => {
             b.addEventListener("click", () => { detailCat = b.dataset.c; renderDetail(); });
         });
 
-        const rows = monthRows
-            .filter(r => (r[3] || "Ostatní") === detailCat)
-            .map(r => ({ date: parseDate(r[0]), amt: Number(r[1]) || 0, acc: normAccount(r[2]), sub: r[4] || "", note: r[5] || "" }))
-            .sort((a, b) => b.date - a.date);
+        const source = isRec
+            ? recRows
+            : monthRows.filter(r => (r[3] || "Ostatní") === detailCat && !isRecRow(r));
+
+        const rows = source.map(r => {
+            const rec = isRecRow(r);
+            const cat = r[3] || "Ostatní";
+            const sub = r[4] || "";
+            const note = String(r[5] || "");
+            return {
+                date: parseDate(r[0]),
+                amt: Number(r[1]) || 0,
+                acc: normAccount(r[2]),
+                title: rec ? note.slice(REC_PREFIX.length) : sub,
+                meta: rec ? cat + (sub ? " · " + sub : "") : "",
+                note: rec ? "" : note
+            };
+        }).sort((a, b) => b.date - a.date);
 
         const total = rows.reduce((s, x) => s + x.amt, 0);
         $("detailTotal").textContent = fmt(total);
@@ -941,16 +1031,24 @@
                 <div class="tx">
                     <div class="tx-date">${fmtDate(x.date)}</div>
                     <div class="tx-main">
-                        <div class="tx-sub">${x.sub || "—"}</div>
+                        <div class="tx-sub">${x.title || "—"}</div>
+                        ${x.meta ? `<div class="tx-note">${x.meta}</div>` : ""}
                         ${x.note ? `<div class="tx-note">${x.note}</div>` : ""}
                         <div class="tx-acc">${x.acc}</div>
                     </div>
                     <div class="tx-amount">${fmt(x.amt)}</div>
                 </div>`).join("")
-            : '<div class="empty"><i class="fa-regular fa-folder-open"></i> V této kategorii zatím žádné výdaje</div>';
+            : '<div class="empty"><i class="fa-regular fa-folder-open"></i> Zatím žádné položky</div>';
     }
 
-    // Pravidelné platby: zaplaceno, jakmile nastal jejich den (nebo je zapsaná v tabulce)
+    // Pořadí pravidelných plateb: účet (Společný, Pavel, Gabi), pak stejná položka na stejné pozici
+    function recOrderOf(r) {
+        const base = String(r[0]).replace(/\s+(Gabi|Pavel)$/, "");
+        const i = REC_ORDER.indexOf(base);
+        return i < 0 ? 999 : i;
+    }
+
+    // Pravidelné platby: "zaplaceno", jakmile je položka zapsaná v tabulce. Den se nezobrazuje.
     function renderRecurring() {
         const k = curMonth;
         $("recMonthLabel").textContent = labelOf(k);
@@ -962,41 +1060,56 @@
             return;
         }
 
+        const sorted = active
+            .map((r, idx) => ({ r, idx }))
+            .sort((a, b) => {
+                const ra = ACC_RANK[normAccount(a.r[2])] ?? 9;
+                const rb = ACC_RANK[normAccount(b.r[2])] ?? 9;
+                if (ra !== rb) return ra - rb;
+                const oa = recOrderOf(a.r), ob = recOrderOf(b.r);
+                if (oa !== ob) return oa - ob;
+                return a.idx - b.idx;
+            })
+            .map(x => x.r);
+
         const now = new Date();
         const nowK = keyOf(now);
         const today = now.getDate();
 
-        // Položky, které už jsou v tabulce pro vybraný měsíc (podle poznámky "trvalá: název")
-        const inSheet = new Set(RAW
-            .filter(r => {
-                const d = parseDate(r[0]);
-                return !isNaN(d) && keyOf(d) === k && String(r[5] || "").startsWith("trvalá: ");
-            })
-            .map(r => String(r[5]).slice(8)));
+        const inSheet = new Set(monthRowsOf(k)
+            .filter(isRecRow)
+            .map(r => String(r[5]).slice(REC_PREFIX.length)));
 
         let sum = 0;
-        $("recList").innerHTML = active.map(r => {
+        $("recList").innerHTML = sorted.map(r => {
             const name = String(r[0]);
             const amt = Number(r[1]) || 0;
             const day = Number(r[5]) || 1;
             sum += amt;
 
-            let paid;
-            if (inSheet.has(name)) paid = true;
-            else if (k < nowK) paid = true;
-            else if (k === nowK) paid = day <= today;
-            else paid = false;
+            const paid = inSheet.has(name);
+            const due = k < nowK || (k === nowK && day <= today);
 
-            const statusText = paid ? "zaplaceno" : "čeká · " + day + ".";
+            let cls = "", icon = "fa-clock", text = "čeká", style = "";
+            if (paid) {
+                cls = "done";
+                icon = "fa-check";
+                text = "zaplaceno";
+            } else if (due) {
+                style = "color:#fbbf24; border-color:rgba(251,191,36,0.45);";
+                icon = "fa-triangle-exclamation";
+                text = "chybí v tabulce";
+            }
+
             return `
                 <div class="rec-item">
                     <div class="rec-main">
                         <div class="rec-name">${name}</div>
-                        <div class="rec-meta">${normAccount(r[2])} · ${r[3] || ""}${r[4] ? " · " + r[4] : ""}${r[5] ? " · den " + r[5] : ""}</div>
+                        <div class="rec-meta">${normAccount(r[2])} · ${r[3] || ""}${r[4] ? " · " + r[4] : ""}</div>
                     </div>
                     <div class="rec-amount">${fmt(amt)}</div>
-                    <span class="rec-status ${paid ? "done" : ""}">
-                        <i class="fa-solid ${paid ? "fa-check" : "fa-clock"}"></i> ${statusText}
+                    <span class="rec-status ${cls}" style="${style}">
+                        <i class="fa-solid ${icon}"></i> ${text}
                     </span>
                 </div>`;
         }).join("");
