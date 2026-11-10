@@ -76,8 +76,8 @@
         .glass:hover { border-color: var(--glass-border-hover); }
 
         .topbar {
-            position: sticky; top: 20px; z-index: 100;
-            max-width: 900px; width: calc(100% - 32px); margin: 20px auto 0;
+            position: sticky; top: 16px; z-index: 100;
+            max-width: 900px; width: calc(100% - 32px); margin: 16px auto 0;
             display: flex; align-items: center; justify-content: space-between; gap: 16px;
             padding: 8px 12px 8px 20px; border-radius: 999px;
             background: rgba(10, 12, 16, 0.25);
@@ -136,6 +136,7 @@
             display: flex; justify-content: space-between; align-items: center;
             gap: 12px; margin-bottom: 26px; flex-wrap: wrap;
         }
+        .card-head-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         .card-title {
             font-size: 24px; font-weight: 300; letter-spacing: -0.03em; margin: 0;
             display: flex; align-items: center; gap: 12px; color: var(--text-primary);
@@ -281,6 +282,14 @@
         .legend-item .val { font-weight: 500; color: var(--text-primary); font-variant-numeric: tabular-nums; font-size: 14px; margin-right: 10px; }
         .legend-item .chev { font-size: 10px; color: var(--text-muted); }
 
+        .mini-btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--pill-bg); border: 1px solid var(--pill-border); color: var(--text-primary);
+            border-radius: 999px; padding: 8px 14px; font: inherit; font-size: 12px; cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); white-space: nowrap;
+        }
+        .mini-btn:hover { border-color: rgba(255, 255, 255, 0.3); }
+
         .back-btn {
             display: inline-flex; align-items: center; gap: 8px;
             background: var(--pill-bg); border: 1px solid var(--pill-border); color: var(--text-primary);
@@ -305,6 +314,22 @@
         .tx-note { font-size: 12px; color: var(--text-secondary); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .tx-acc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
         .tx-amount { font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+        /* Tabulka všech výdajů měsíce */
+        .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -8px; padding: 0 8px; }
+        .gtable { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 560px; }
+        .gtable th, .gtable td {
+            padding: 10px 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            text-align: left; white-space: nowrap; font-weight: 300;
+        }
+        .gtable th {
+            color: var(--text-secondary); font-weight: 400; font-size: 10px;
+            text-transform: uppercase; letter-spacing: 0.08em;
+        }
+        .gtable td.note { max-width: 180px; overflow: hidden; text-overflow: ellipsis; color: var(--text-secondary); }
+        .gtable .num { text-align: right; font-variant-numeric: tabular-nums; }
+        .gtable tbody tr:hover { background: rgba(255, 255, 255, 0.03); }
+        .gtable tfoot td { font-weight: 500; color: var(--text-primary); border-bottom: 0; padding-top: 14px; }
 
         .rec-list { display: grid; gap: 8px; }
         .rec-item {
@@ -379,13 +404,40 @@
 
         input, select, textarea { font-size: 16px !important; }
 
+        /* ---------- Mobil ---------- */
         @media (max-width: 820px) {
-            .grid-2 { grid-template-columns: 1fr; }
-            .stats { grid-template-columns: repeat(2, 1fr); }
-            .topbar { flex-direction: column; align-items: stretch; padding: 12px; border-radius: 28px; }
+            main { padding: 0 12px; margin-top: 24px; }
+            .card { padding: 20px; margin-bottom: 18px; }
+            .card-title { font-size: 20px; }
+            .card-title.small { font-size: 17px; }
+            .card-head { margin-bottom: 18px; }
+
+            .grid-2 { grid-template-columns: 1fr; gap: 18px; }
+            .stats { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+            .stat { padding: 16px; border-radius: 20px; }
+            .stat-value { font-size: 21px; }
+            .stat-label { font-size: 10px; margin-bottom: 8px; }
+
+            .topbar {
+                flex-direction: column; align-items: stretch; gap: 10px;
+                width: calc(100% - 24px); padding: 10px; border-radius: 26px; top: 12px;
+            }
             .brand { justify-content: center; }
-            .tabs button { flex: 1; justify-content: center; }
+            .tabs { width: 100%; }
+            .tabs button {
+                flex: 1; justify-content: center; padding: 8px 6px; font-size: 12px; gap: 0;
+            }
+            .tabs button i { display: none; }
+
+            .chart { height: 240px; }
+            .donut-center .dc-pct { font-size: 22px; }
+            .donut-center .dc-name { font-size: 13px; }
+
             .row { grid-template-columns: 1fr; }
+            .chip { padding: 7px 13px; font-size: 12px; }
+            .legend-item .name { font-size: 12px; }
+            .legend-item .val { font-size: 13px; }
+            .detail-total .stat-value { font-size: 20px; }
         }
     </style>
 </head>
@@ -485,12 +537,12 @@
                 <div class="stat-value primary" id="mTotal">—</div>
             </div>
             <div class="glass stat">
-                <div class="stat-label" id="mPrevLabel">Předchozí měsíc</div>
-                <div class="stat-value" id="mPrev">—</div>
-            </div>
-            <div class="glass stat">
                 <div class="stat-label">Změna oproti předchozímu</div>
                 <div class="stat-value" id="mChange">—</div>
+            </div>
+            <div class="glass stat">
+                <div class="stat-label" id="mPrevLabel">Předchozí měsíc</div>
+                <div class="stat-value" id="mPrev">—</div>
             </div>
         </div>
 
@@ -502,7 +554,7 @@
                 </div>
                 <div class="chart donut-wrap">
                     <canvas id="chartMonth"></canvas>
-                    <div class="donut-center" id="donutCenter">
+                    <div class="donut-center">
                         <div class="dc-label">Největší</div>
                         <div class="dc-name" id="dcName">—</div>
                         <div class="dc-pct" id="dcPct"></div>
@@ -512,7 +564,10 @@
             <div class="glass card">
                 <div class="card-head">
                     <h3 class="card-title small">Rozpis</h3>
-                    <span class="muted">klikni pro detail</span>
+                    <div class="card-head-actions">
+                        <span class="muted">klikni pro detail</span>
+                        <button type="button" class="mini-btn" id="listBtn"><i class="fa-solid fa-table"></i> Celý seznam</button>
+                    </div>
                 </div>
                 <div class="legend" id="legend"></div>
             </div>
@@ -548,6 +603,42 @@
             <div class="chips detail-cats" id="detailCats"></div>
 
             <div class="tx-list" id="txList"></div>
+        </div>
+    </section>
+
+    <!-- CELÝ SEZNAM VÝDAJŮ MĚSÍCE -->
+    <section class="view" id="view-list">
+        <div class="card-head">
+            <button type="button" class="back-btn" id="backBtn2"><i class="fa-solid fa-arrow-left"></i> Zpět</button>
+            <span class="muted" id="listMonthLabel"></span>
+        </div>
+
+        <div class="glass card">
+            <div class="card-head">
+                <h2 class="card-title small">Celý <span>seznam</span></h2>
+                <span class="muted" id="listCount"></span>
+            </div>
+            <div class="table-wrap">
+                <table class="gtable">
+                    <thead>
+                        <tr>
+                            <th>Datum</th>
+                            <th>Kategorie</th>
+                            <th>Podkategorie</th>
+                            <th>Účet</th>
+                            <th>Poznámka</th>
+                            <th class="num">Kč</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listBody"></tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="5">Celkem</td>
+                            <td class="num" id="listTotal"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
         </div>
     </section>
 
@@ -658,7 +749,7 @@
     function showView(name) {
         document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
         $("view-" + name).classList.add("active");
-        const tabName = name === "detail" ? "month" : name;
+        const tabName = (name === "detail" || name === "list") ? "month" : name;
         document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("active", b.dataset.view === tabName));
         setTimeout(() => Object.values(charts).forEach(c => { c.resize(); c.update(); }), 60);
         window.scrollTo(0, 0);
@@ -669,6 +760,11 @@
     });
 
     $("backBtn").addEventListener("click", () => showView("month"));
+    $("backBtn2").addEventListener("click", () => showView("month"));
+    $("listBtn").addEventListener("click", () => {
+        renderList();
+        showView("list");
+    });
 
     // ---------- Formulář ----------
     document.querySelectorAll("#accounts button").forEach(btn => {
@@ -839,6 +935,9 @@
     }
     function fmtDate(d) {
         return d.getDate() + ". " + (d.getMonth() + 1) + ". " + d.getFullYear();
+    }
+    function fmtDateShort(d) {
+        return d.getDate() + ". " + (d.getMonth() + 1) + ".";
     }
 
     // Všechny řádky (ruční i trvalé) se počítají podle své kategorie
@@ -1055,6 +1154,42 @@
                     <div class="tx-amount">${fmt(x.amt)}</div>
                 </div>`).join("")
             : '<div class="empty"><i class="fa-regular fa-folder-open"></i> V této kategorii zatím žádné položky</div>';
+    }
+
+    // Celý seznam výdajů měsíce, chronologicky od nejstarších
+    function renderList() {
+        const k = curMonth;
+        $("listMonthLabel").textContent = labelOf(k);
+
+        const rows = monthRowsOf(k)
+            .map(r => {
+                const rec = isRecRow(r);
+                return {
+                    date: parseDate(r[0]),
+                    cat: r[3] || "Ostatní",
+                    sub: r[4] || "",
+                    acc: normAccount(r[2]),
+                    note: rec ? "trvalá platba" : String(r[5] || ""),
+                    amt: Number(r[1]) || 0
+                };
+            })
+            .sort((a, b) => a.date - b.date);
+
+        $("listCount").textContent = rows.length + " položek";
+        $("listBody").innerHTML = rows.length
+            ? rows.map(x => `
+                <tr>
+                    <td>${fmtDateShort(x.date)}</td>
+                    <td>${x.cat}</td>
+                    <td>${x.sub}</td>
+                    <td>${x.acc}</td>
+                    <td class="note" title="${x.note}">${x.note}</td>
+                    <td class="num">${fmt(x.amt)}</td>
+                </tr>`).join("")
+            : '<tr><td colspan="6" class="muted" style="text-align:center;font-style:italic;padding:24px 0">Tento měsíc zatím žádné výdaje</td></tr>';
+
+        const total = rows.reduce((s, x) => s + x.amt, 0);
+        $("listTotal").textContent = fmt(total);
     }
 
     // Pořadí pravidelných plateb: účet (Společný, Pavel, Gabi), pak stejná položka na stejné pozici
