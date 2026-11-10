@@ -315,18 +315,25 @@
         .tx-acc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
         .tx-amount { font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
-        /* Tabulka všech výdajů měsíce */
-        .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -8px; padding: 0 8px; }
-        .gtable { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 560px; }
+        /* Tabulka všech výdajů měsíce: vejde se na šířku telefonu */
+        .gtable {
+            width: 100%; border-collapse: collapse; font-size: 12px;
+            table-layout: fixed;
+        }
         .gtable th, .gtable td {
-            padding: 10px 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-            text-align: left; white-space: nowrap; font-weight: 300;
+            padding: 9px 4px; border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            text-align: left; font-weight: 300; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
         .gtable th {
             color: var(--text-secondary); font-weight: 400; font-size: 10px;
-            text-transform: uppercase; letter-spacing: 0.08em;
+            text-transform: uppercase; letter-spacing: 0.04em;
         }
-        .gtable td.note { max-width: 180px; overflow: hidden; text-overflow: ellipsis; color: var(--text-secondary); }
+        .gtable .c-date { width: 13%; }
+        .gtable .c-cat { width: 18%; }
+        .gtable .c-sub { width: 22%; }
+        .gtable .c-acc { width: 8%; }
+        .gtable .c-note { width: 24%; color: var(--text-secondary); }
+        .gtable .c-amt { width: 15%; }
         .gtable .num { text-align: right; font-variant-numeric: tabular-nums; }
         .gtable tbody tr:hover { background: rgba(255, 255, 255, 0.03); }
         .gtable tfoot td { font-weight: 500; color: var(--text-primary); border-bottom: 0; padding-top: 14px; }
@@ -438,6 +445,11 @@
             .legend-item .name { font-size: 12px; }
             .legend-item .val { font-size: 13px; }
             .detail-total .stat-value { font-size: 20px; }
+
+            .card.list-card { padding: 16px 12px; }
+            .gtable { font-size: 11px; }
+            .gtable th { font-size: 9px; }
+            .gtable th, .gtable td { padding: 8px 3px; }
         }
     </style>
 </head>
@@ -613,32 +625,33 @@
             <span class="muted" id="listMonthLabel"></span>
         </div>
 
-        <div class="glass card">
+        <div class="glass card list-card">
             <div class="card-head">
                 <h2 class="card-title small">Celý <span>seznam</span></h2>
                 <span class="muted" id="listCount"></span>
             </div>
-            <div class="table-wrap">
-                <table class="gtable">
-                    <thead>
-                        <tr>
-                            <th>Datum</th>
-                            <th>Kategorie</th>
-                            <th>Podkategorie</th>
-                            <th>Účet</th>
-                            <th>Poznámka</th>
-                            <th class="num">Kč</th>
-                        </tr>
-                    </thead>
-                    <tbody id="listBody"></tbody>
-                    <tfoot>
-                        <tr>
-                            <td colspan="5">Celkem</td>
-                            <td class="num" id="listTotal"></td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
+            <table class="gtable">
+                <colgroup>
+                    <col class="c-date"><col class="c-cat"><col class="c-sub"><col class="c-acc"><col class="c-note"><col class="c-amt">
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th>Datum</th>
+                        <th>Kategorie</th>
+                        <th>Podkategorie</th>
+                        <th>Účet</th>
+                        <th>Poznámka</th>
+                        <th class="num">Kč</th>
+                    </tr>
+                </thead>
+                <tbody id="listBody"></tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="5">Celkem</td>
+                        <td class="num" id="listTotal"></td>
+                    </tr>
+                </tfoot>
+            </table>
         </div>
     </section>
 
@@ -694,6 +707,8 @@
 
     // Pořadí účtů v seznamu pravidelných plateb
     const ACC_RANK = { "Společný": 0, "Pavel": 1, "Gabi": 2 };
+    // Zkrácené názvy účtů pro tabulku
+    const ACC_SHORT = { "Společný": "S.", "Pavel": "P.", "Gabi": "G." };
     // Pořadí položek: stejné položky u Pavla a Gabi jsou na stejné pozici
     const REC_ORDER = ["Pojištění bytu", "Energie", "Internet", "Hypotéka", "iCloud", "Penzijní spoření", "Spotify", "Lightroom", "Netflix"];
 
@@ -712,6 +727,7 @@
 
     const $ = id => document.getElementById(id);
     const fmt = n => Math.round(n).toLocaleString("cs-CZ") + " Kč";
+    const fmtNum = n => Math.round(n).toLocaleString("cs-CZ");
     const nowKey = keyOf(new Date());
     curMonth = nowKey;
 
@@ -1168,7 +1184,7 @@
                     date: parseDate(r[0]),
                     cat: r[3] || "Ostatní",
                     sub: r[4] || "",
-                    acc: normAccount(r[2]),
+                    acc: ACC_SHORT[normAccount(r[2])] || normAccount(r[2]),
                     note: rec ? "trvalá platba" : String(r[5] || ""),
                     amt: Number(r[1]) || 0
                 };
@@ -1179,17 +1195,17 @@
         $("listBody").innerHTML = rows.length
             ? rows.map(x => `
                 <tr>
-                    <td>${fmtDateShort(x.date)}</td>
-                    <td>${x.cat}</td>
-                    <td>${x.sub}</td>
+                    <td title="${fmtDate(x.date)}">${fmtDateShort(x.date)}</td>
+                    <td title="${x.cat}">${x.cat}</td>
+                    <td title="${x.sub}">${x.sub}</td>
                     <td>${x.acc}</td>
-                    <td class="note" title="${x.note}">${x.note}</td>
-                    <td class="num">${fmt(x.amt)}</td>
+                    <td title="${x.note}">${x.note}</td>
+                    <td class="num">${fmtNum(x.amt)}</td>
                 </tr>`).join("")
             : '<tr><td colspan="6" class="muted" style="text-align:center;font-style:italic;padding:24px 0">Tento měsíc zatím žádné výdaje</td></tr>';
 
         const total = rows.reduce((s, x) => s + x.amt, 0);
-        $("listTotal").textContent = fmt(total);
+        $("listTotal").textContent = fmtNum(total);
     }
 
     // Pořadí pravidelných plateb: účet (Společný, Pavel, Gabi), pak stejná položka na stejné pozici
