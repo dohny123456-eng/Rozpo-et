@@ -206,6 +206,18 @@
         }
         .seg .ico { width: 16px; height: 16px; fill: currentColor; flex-shrink: 0; }
 
+        /* Malý přepínač režimu (Kategorie / Kdo) */
+        .seg2 {
+            display: inline-flex; background: rgba(0, 0, 0, 0.2); border-radius: 999px;
+            padding: 3px; border: 1px solid var(--pill-border);
+        }
+        .seg2 button {
+            background: transparent; border: 0; color: var(--text-secondary);
+            padding: 6px 12px; border-radius: 999px; font: inherit; font-size: 12px;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .seg2 button.active { background: var(--text-primary); color: #000; font-weight: 500; }
+
         .chips { display: flex; flex-wrap: wrap; gap: 8px; }
         .chip {
             background: var(--pill-bg); border: 1px solid var(--pill-border); color: var(--text-secondary);
@@ -248,7 +260,7 @@
 
         .chart { position: relative; height: 280px; width: 100%; }
 
-        /* Střed koláče: největší kategorie a její podíl */
+        /* Střed koláče: největší kategorie (nebo plátce) a její podíl */
         .donut-wrap { position: relative; }
         .donut-center {
             position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
@@ -274,13 +286,20 @@
         .legend-item {
             display: flex; align-items: center; padding: 10px 12px; border-radius: 14px;
             background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);
-            transition: background 0.2s; cursor: pointer;
+            transition: background 0.2s;
         }
-        .legend-item:hover { background: rgba(255, 255, 255, 0.07); }
+        .legend-item.clickable { cursor: pointer; }
+        .legend-item.clickable:hover { background: rgba(255, 255, 255, 0.07); }
         .legend-item .dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 14px; flex-shrink: 0; }
         .legend-item .name { flex: 1; font-size: 13px; color: var(--text-secondary); }
         .legend-item .val { font-weight: 500; color: var(--text-primary); font-variant-numeric: tabular-nums; font-size: 14px; margin-right: 10px; }
         .legend-item .chev { font-size: 10px; color: var(--text-muted); }
+        .legend-total {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 12px 4px; margin-top: 4px; border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 13px; color: var(--text-secondary);
+        }
+        .legend-total b { color: var(--text-primary); font-weight: 500; font-size: 15px; font-variant-numeric: tabular-nums; }
 
         .mini-btn {
             display: inline-flex; align-items: center; gap: 8px;
@@ -562,12 +581,15 @@
             <div class="glass card">
                 <div class="card-head">
                     <h3 class="card-title small">Podíl výdajů</h3>
-                    <span class="muted">všechny kategorie</span>
+                    <div class="seg2" id="modeSeg">
+                        <button type="button" class="active" data-mode="cats">Kategorie</button>
+                        <button type="button" data-mode="people">Kdo</button>
+                    </div>
                 </div>
                 <div class="chart donut-wrap">
                     <canvas id="chartMonth"></canvas>
                     <div class="donut-center">
-                        <div class="dc-label">Největší</div>
+                        <div class="dc-label" id="dcLabel">Největší</div>
                         <div class="dc-name" id="dcName">—</div>
                         <div class="dc-pct" id="dcPct"></div>
                     </div>
@@ -577,7 +599,7 @@
                 <div class="card-head">
                     <h3 class="card-title small">Rozpis</h3>
                     <div class="card-head-actions">
-                        <span class="muted">klikni pro detail</span>
+                        <span class="muted" id="legendHint">klikni pro detail</span>
                         <button type="button" class="mini-btn" id="listBtn"><i class="fa-solid fa-table"></i> Celý seznam</button>
                     </div>
                 </div>
@@ -686,7 +708,7 @@
     const CATEGORIES = {
         "Jídlo": ["Obchod", "Restaurace", "Kavárna", "Hospoda", "Dovoz"],
         "Drogerie": ["Kosmetika", "Čištění", "Praní"],
-        "Kočky": ["Krmivo", "Toaleta", "Veterina"],
+        "Kočky": ["Krmivo", "Toaleta", "Veterina", "Jiné"],
         "Doprava": ["Palivo", "Servis", "Dálnice", "Pojištění", "Mytí", "Parkování"],
         "Domácnost": ["Rostliny", "Dekorace", "Nádobí", "Textílie", "Terasa"],
         "Bydlení": ["Hypotéka", "Energie", "Internet", "Pojištění bytu", "Servis"],
@@ -702,6 +724,9 @@
     const PALETTE = ["#60a5fa", "#34d399", "#fbbf24", "#f87171", "#a78bfa", "#f472b6"];
     const COLOR_BY_CAT = {};
     Object.keys(CATEGORIES).forEach((c, i) => COLOR_BY_CAT[c] = COLORS[i % COLORS.length]);
+
+    // Barvy pro účty v režimu "Kdo"
+    const COLOR_BY_ACC = { "Společný": "#8fb4e8", "Pavel": "#e8a5a5", "Gabi": "#9fd4b5" };
 
     const REC_PREFIX = "trvalá: ";
 
@@ -723,6 +748,7 @@
     let cmpSel = [];
     let curMonth = null;
     let detailCat = null;
+    let chartMode = "cats";   // "cats" = kategorie, "people" = kdo kolik utratil
     const charts = {};
 
     const $ = id => document.getElementById(id);
@@ -780,6 +806,15 @@
     $("listBtn").addEventListener("click", () => {
         renderList();
         showView("list");
+    });
+
+    // ---------- Režim grafu: Kategorie / Kdo ----------
+    document.querySelectorAll("#modeSeg button").forEach(btn => {
+        btn.addEventListener("click", () => {
+            chartMode = btn.dataset.mode;
+            document.querySelectorAll("#modeSeg button").forEach(b => b.classList.toggle("active", b === btn));
+            renderMonth();
+        });
     });
 
     // ---------- Formulář ----------
@@ -1070,14 +1105,24 @@
             change.className = "stat-value";
         }
 
+        if (chartMode === "people") {
+            renderPeople(k, m.total);
+        } else {
+            renderCats(m);
+        }
+    }
+
+    // Režim Kategorie: koláč podle kategorií
+    function renderCats(m) {
         const cats = Object.keys(m.cats).sort((a, b) => m.cats[b] - m.cats[a]);
         const hasData = cats.length > 0;
 
-        // Střed koláče: největší kategorie a její podíl
         if (hasData && m.total > 0) {
+            $("dcLabel").textContent = "Největší";
             $("dcName").textContent = cats[0];
             $("dcPct").textContent = Math.round(m.cats[cats[0]] / m.total * 100) + " %";
         } else {
+            $("dcLabel").textContent = "Největší";
             $("dcName").textContent = "—";
             $("dcPct").textContent = "";
         }
@@ -1096,9 +1141,10 @@
             options: { cutout: "78%", maintainAspectRatio: false, plugins: { legend: { display: false } } }
         });
 
+        $("legendHint").textContent = "klikni pro detail";
         $("legend").innerHTML = hasData
             ? cats.map(c => `
-                <div class="legend-item" data-cat="${c}">
+                <div class="legend-item clickable" data-cat="${c}">
                     <span class="dot" style="background:${COLOR_BY_CAT[c] || "#8e8e93"}"></span>
                     <span class="name">${c}</span>
                     <span class="val">${fmt(m.cats[c])}</span>
@@ -1107,8 +1153,59 @@
             : '<div class="empty"><i class="fa-regular fa-folder-open"></i> Tento měsíc zatím žádné výdaje</div>';
     }
 
+    // Režim Kdo: kolik utratil Společný, Pavel a Gabi
+    function renderPeople(k, total) {
+        const accTotals = { "Společný": 0, "Pavel": 0, "Gabi": 0 };
+        monthRowsOf(k).forEach(r => {
+            const a = normAccount(r[2]);
+            if (accTotals[a] !== undefined) accTotals[a] += Number(r[1]) || 0;
+        });
+
+        const accs = Object.keys(accTotals).filter(a => accTotals[a] > 0).sort((a, b) => accTotals[b] - accTotals[a]);
+        const sum = accs.reduce((s, a) => s + accTotals[a], 0);
+        const hasData = accs.length > 0;
+
+        if (hasData && sum > 0) {
+            $("dcLabel").textContent = "Nejvíc utratil";
+            $("dcName").textContent = accs[0];
+            $("dcPct").textContent = Math.round(accTotals[accs[0]] / sum * 100) + " %";
+        } else {
+            $("dcLabel").textContent = "Nejvíc utratil";
+            $("dcName").textContent = "—";
+            $("dcPct").textContent = "";
+        }
+
+        setChart("chartMonth", {
+            type: "doughnut",
+            data: {
+                labels: hasData ? accs : ["Zatím nic"],
+                datasets: [{
+                    data: hasData ? accs.map(a => accTotals[a]) : [1],
+                    backgroundColor: hasData ? accs.map(a => COLOR_BY_ACC[a]) : ["#1c1c1e"],
+                    borderWidth: 0,
+                    hoverOffset: 6
+                }]
+            },
+            options: { cutout: "78%", maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+
+        $("legendHint").textContent = "kolik utratil každý";
+        $("legend").innerHTML = hasData
+            ? accs.map(a => `
+                <div class="legend-item">
+                    <span class="dot" style="background:${COLOR_BY_ACC[a]}"></span>
+                    <span class="name">${a}</span>
+                    <span class="val">${fmt(accTotals[a])}</span>
+                </div>`).join("") + `
+                <div class="legend-total">
+                    <span>Součet</span>
+                    <b>${fmt(sum)}</b>
+                </div>`
+            : '<div class="empty"><i class="fa-regular fa-folder-open"></i> Tento měsíc zatím žádné výdaje</div>';
+    }
+
     $("legend").addEventListener("click", e => {
-        const item = e.target.closest(".legend-item");
+        const item = e.target.closest(".legend-item.clickable");
         if (item) openDetail(item.dataset.cat);
     });
 
