@@ -269,23 +269,23 @@
         .form-wrap { max-width: 580px; margin: 0 auto; }
 
         /* ---------- Hra ---------- */
-        .game-wrap { max-width: 420px; margin: 0 auto; text-align: center; }
+        .game-wrap { max-width: 480px; margin: 0 auto; text-align: center; }
         .game-wrap .chips { justify-content: center; margin-bottom: 18px; }
         #gameCanvas {
             width: 100%; height: auto; display: block; border-radius: 18px;
-            border: 1px solid var(--glass-border); background: #0b0b0c; touch-action: none;
+            border: 1px solid var(--glass-border); background: #0b0b0c; touch-action: manipulation;
+            cursor: pointer;
         }
-        .pad { display: flex; justify-content: space-between; gap: 10px; margin-top: 14px; }
+        .pad { margin-top: 14px; }
         .pad button {
-            flex: 1; padding: 16px 0; border-radius: 18px;
+            width: 100%; padding: 16px 0; border-radius: 18px;
             background: var(--pill-bg); border: 1px solid var(--pill-border); color: var(--text-primary);
-            font: inherit; font-size: 18px; user-select: none; -webkit-user-select: none; touch-action: none;
+            font: inherit; font-size: 16px; user-select: none; -webkit-user-select: none; touch-action: manipulation;
         }
         .pad button:active { background: rgba(255, 255, 255, 0.16); }
         .game-info { margin-top: 12px; color: var(--text-secondary); font-size: 13px; }
         .game-actions { margin-top: 12px; }
 
-        chart { position: relative; }
         .chart { position: relative; height: 280px; width: 100%; }
 
         /* Střed koláče: největší kategorie (nebo plátce) a její podíl */
@@ -735,17 +735,15 @@
         <div class="game-wrap">
             <div class="card-head" style="justify-content:space-between">
                 <button type="button" class="back-btn" id="backGame"><i class="fa-solid fa-arrow-left"></i> Zpět</button>
-                <span class="muted">Sbírej mince</span>
+                <span class="muted">Dino běh</span>
             </div>
 
             <div class="chips" id="charChips"></div>
 
-            <canvas id="gameCanvas" width="360" height="480"></canvas>
+            <canvas id="gameCanvas" width="360" height="260"></canvas>
 
-            <div class="pad" id="pad">
-                <button type="button" data-k="l">◀</button>
-                <button type="button" data-k="j">⤒</button>
-                <button type="button" data-k="r">▶</button>
+            <div class="pad">
+                <button type="button" id="jumpBtn"><i class="fa-solid fa-arrow-up"></i> Skok</button>
             </div>
 
             <div class="game-info" id="gameInfo"></div>
@@ -849,7 +847,7 @@
         if (name !== "game") stopGame();
         document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
         $("view-" + name).classList.add("active");
-        const tabName = (name === "detail" || name === "list") ? "month" : name;
+        const tabName = (name === "detail" || name === "list" || name === "game") ? (name === "game" ? "new" : "month") : name;
         document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("active", b.dataset.view === tabName));
         setTimeout(() => Object.values(charts).forEach(c => { c.resize(); c.update(); }), 60);
         window.scrollTo(0, 0);
@@ -979,59 +977,366 @@
         }
     });
 
-    // ---------- Hra: plošinovka v černobílém stylu ----------
+    // ---------- Hra: dinosaurus v černobílém stylu ----------
     const CHARS = {
-        "Pavel": { type: "human", hair: "short", w: 26, h: 38 },
-        "Gabi":  { type: "human", hair: "long",  w: 26, h: 38 },
-        "Amy":   { type: "cat",   col: "#e6e6e6", w: 30, h: 28, stripes: false },
-        "Leoš":  { type: "cat",   col: "#a8a8a8", w: 37, h: 33, stripes: true }
+        "Pavel": { type: "human", hair: "short", w: 28, h: 42 },
+        "Gabi":  { type: "human", hair: "long",  w: 28, h: 42 },
+        "Amy":   { type: "cat",   col: "#e6e6e6", w: 34, h: 26, stripes: false },
+        "Leoš":  { type: "cat",   col: "#a8a8a8", w: 42, h: 32, stripes: true }
     };
+
     const GAME = {
-        W: 360, H: 480, running: false, raf: 0,
-        keys: {}, touch: { l: false, r: false }, jumpReq: false,
+        W: 360, H: 260, GROUND: 220, X: 44,
+        active: false, running: false, over: false, raf: 0,
+        frame: 0, speed: 5, dist: 0, y: 0, vy: 0, onGround: true,
+        obs: [], lastGap: 300,
         char: localStorage.getItem("gameChar") || "Pavel",
-        bestT: Number(localStorage.getItem("gameBestT") || 0),
-        p: null, plats: [], coins: [], got: 0, done: false, startT: 0, elapsed: 0
+        best: Number(localStorage.getItem("dinoBest") || 0)
     };
     if (!CHARS[GAME.char]) GAME.char = "Pavel";
 
-    const PLATS = [
-        { x: 0,   y: 448, w: 360, h: 32 },
-        { x: 24,  y: 372, w: 112, h: 12 },
-        { x: 224, y: 372, w: 112, h: 12 },
-        { x: 120, y: 296, w: 120, h: 12 },
-        { x: 16,  y: 218, w: 100, h: 12 },
-        { x: 244, y: 218, w: 100, h: 12 },
-        { x: 124, y: 140, w: 112, h: 12 }
-    ];
+    function ch() { return CHARS[GAME.char]; }
+    function score() { return Math.floor(GAME.dist / 10); }
 
-    function buildCoins() {
-        const list = [];
-        [60, 180, 300].forEach(x => list.push({ x, y: 416, got: false }));
-        PLATS.slice(1).forEach(pl => {
-            for (let k = 0; k < 3; k++) {
-                list.push({ x: pl.x + 22 + k * (pl.w - 44) / 2, y: pl.y - 22, got: false });
+    function resetGame() {
+        const c = ch();
+        GAME.frame = 0;
+        GAME.speed = 5;
+        GAME.dist = 0;
+        GAME.y = GAME.GROUND - c.h;
+        GAME.vy = 0;
+        GAME.onGround = true;
+        GAME.obs = [];
+        GAME.lastGap = 300;
+        GAME.over = false;
+        GAME.running = false;
+    }
+
+    // Jeden dotek nebo mezerník: start, nová hra po nárazu, nebo skok
+    function action() {
+        if (!GAME.active) return;
+        if (GAME.over) resetGame();
+        if (!GAME.running) GAME.running = true;
+        if (GAME.onGround) {
+            GAME.vy = -11;
+            GAME.onGround = false;
+        }
+    }
+
+    function spawnObstacle() {
+        const r = Math.random();
+        let w, h;
+        if (r < 0.4)      { w = 12; h = 24; }
+        else if (r < 0.75) { w = 16; h = 40; }
+        else              { w = 32; h = 24; }
+        GAME.obs.push({ x: GAME.W + 10, w, h });
+    }
+
+    function updateGame() {
+        if (!GAME.running) return;
+        GAME.frame++;
+        GAME.speed = Math.min(12, 5 + GAME.dist * 0.0012);
+        GAME.dist += GAME.speed;
+
+        // Gravitace a skok
+        const c = ch();
+        if (!GAME.onGround) {
+            GAME.vy += 0.6;
+            GAME.y += GAME.vy;
+            const floor = GAME.GROUND - c.h;
+            if (GAME.y >= floor) {
+                GAME.y = floor;
+                GAME.vy = 0;
+                GAME.onGround = true;
             }
+        }
+
+        // Překážky
+        GAME.obs.forEach(o => o.x -= GAME.speed);
+        GAME.obs = GAME.obs.filter(o => o.x + o.w > -20);
+        const last = GAME.obs[GAME.obs.length - 1];
+        if (!last || last.x < GAME.W - GAME.lastGap) {
+            spawnObstacle();
+            GAME.lastGap = 240 + Math.random() * 200;
+        }
+
+        // Náraz
+        const px = GAME.X + 5, py = GAME.y + 4, pw = c.w - 10, ph = c.h - 6;
+        for (const o of GAME.obs) {
+            const ox = o.x, oy = GAME.GROUND - o.h;
+            if (px < ox + o.w && px + pw > ox && py < oy + o.h && py + ph > oy) {
+                GAME.over = true;
+                GAME.running = false;
+                const s = score();
+                if (s > GAME.best) {
+                    GAME.best = s;
+                    localStorage.setItem("dinoBest", String(s));
+                }
+                break;
+            }
+        }
+    }
+
+    // Pomocný obdélník se zaoblenými rohy
+    function rr(ctx, x, y, w, h, r) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + w, y, x + w, y + h, r);
+        ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r);
+        ctx.arcTo(x, y, x + w, y, r);
+        ctx.closePath();
+    }
+
+    // Člověk s animovaným během (Pavel krátké vlasy, Gabi dlouhé vlasy a šaty)
+    function drawHuman(ctx, c, x, y, frame, animate) {
+        const w = c.w, h = c.h;
+        const sw = animate ? Math.sin(frame * 0.4) : 0;
+        const long = c.hair === "long";
+
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+
+        // Dlouhé vlasy vzadu
+        if (long) {
+            ctx.fillStyle = "#111";
+            ctx.beginPath();
+            ctx.ellipse(14, 13, 9.5, 11, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Nohy
+        ctx.strokeStyle = long ? "#8a8a8a" : "#3b3b3b";
+        ctx.lineWidth = 4;
+        const leg = (hx, a) => {
+            const fx = hx + Math.sin(a) * 8;
+            const fy = Math.min(29 + Math.cos(a) * 12, h - 1);
+            ctx.beginPath();
+            ctx.moveTo(hx, 29);
+            ctx.lineTo(fx, fy);
+            ctx.stroke();
+            // bota
+            ctx.strokeStyle = "#111";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(fx - 2, fy);
+            ctx.lineTo(fx + 3, fy);
+            ctx.stroke();
+            ctx.strokeStyle = long ? "#8a8a8a" : "#3b3b3b";
+            ctx.lineWidth = 4;
+        };
+        leg(11, sw * 0.8);
+        leg(17, -sw * 0.8);
+
+        // Ruce
+        ctx.strokeStyle = long ? "#e4e4e4" : "#d4d4d4";
+        ctx.lineWidth = 3.2;
+        const arm = (sx, sy, a) => {
+            ctx.beginPath();
+            ctx.moveTo(sx, sy);
+            ctx.lineTo(sx + Math.sin(a) * 9, sy + Math.cos(a) * 9);
+            ctx.stroke();
+        };
+        arm(8, 18, -sw * 0.9);
+        arm(20, 18, sw * 0.9);
+
+        // Trup
+        if (long) {
+            // šaty
+            ctx.fillStyle = "#dcdcdc";
+            ctx.strokeStyle = "#111";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(8, 16);
+            ctx.lineTo(20, 16);
+            ctx.lineTo(25, 32);
+            ctx.lineTo(3, 32);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        } else {
+            // tričko a džíny
+            ctx.fillStyle = "#d4d4d4";
+            rr(ctx, 7, 16, 14, 14, 3);
+            ctx.fill();
+            ctx.fillStyle = "#6e6e6e";
+            ctx.fillRect(7, 27, 14, 2.5);
+        }
+
+        // Hlava
+        ctx.fillStyle = "#f2f2f2";
+        ctx.strokeStyle = "#111";
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.arc(14, 9, 6.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Vlasy nahoře
+        ctx.fillStyle = "#111";
+        ctx.beginPath();
+        ctx.arc(14, 9, 6.6, Math.PI * 1.05, Math.PI * 1.95);
+        ctx.closePath();
+        ctx.fill();
+        if (!long) {
+            // krátký pramen navíc
+            ctx.beginPath();
+            ctx.arc(12, 6.5, 2.2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Oko a úsměv
+        ctx.fillStyle = "#111";
+        ctx.beginPath();
+        ctx.arc(16.5, 9.5, 0.9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#111";
+        ctx.lineWidth = 0.9;
+        ctx.beginPath();
+        ctx.arc(15, 11.5, 1.6, 0.2, Math.PI - 0.2);
+        ctx.stroke();
+
+        ctx.restore();
+    }
+
+    // Kočka s během (nohy se střídají)
+    function drawCat(ctx, c, x, y, frame, animate) {
+        const s = animate ? Math.sin(frame * 0.5) : 0;
+        const lift1 = Math.max(0, s) * 2.5;
+        const lift2 = Math.max(0, -s) * 2.5;
+
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(c.w / 26, c.h / 24);
+        ctx.fillStyle = c.col;
+        ctx.strokeStyle = c.col;
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = "round";
+
+        // ocas
+        ctx.beginPath();
+        ctx.moveTo(4, 16);
+        ctx.quadraticCurveTo(-2, 10, 2, 4);
+        ctx.stroke();
+
+        // tělo
+        ctx.beginPath();
+        ctx.ellipse(12, 16, 9, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // nohy
+        ctx.fillRect(6, 19 - lift1, 2.5, 5 + lift1);
+        ctx.fillRect(15, 19 - lift1, 2.5, 5 + lift1);
+        ctx.fillRect(10, 19 - lift2, 2.5, 5 + lift2);
+        ctx.fillRect(18.5, 19 - lift2, 2.5, 5 + lift2);
+
+        // hlava
+        ctx.beginPath();
+        ctx.arc(20, 9, 5.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // uši
+        ctx.beginPath();
+        ctx.moveTo(15, 6); ctx.lineTo(16.5, 0); ctx.lineTo(18.5, 5); ctx.closePath(); ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(20.5, 5); ctx.lineTo(22.5, 0); ctx.lineTo(24.5, 6); ctx.closePath(); ctx.fill();
+
+        // pruhy u Leoše
+        if (c.stripes) {
+            ctx.strokeStyle = "#555";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(8, 11); ctx.lineTo(9, 15);
+            ctx.moveTo(12, 10); ctx.lineTo(12, 15);
+            ctx.moveTo(16, 11); ctx.lineTo(16, 15);
+            ctx.stroke();
+        }
+
+        // oko
+        ctx.fillStyle = "#111";
+        ctx.beginPath();
+        ctx.arc(22, 8, 0.9, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+    }
+
+    function drawGame() {
+        const cv = $("gameCanvas");
+        const ctx = cv.getContext("2d");
+        const W = GAME.W, H = GAME.H, G = GAME.GROUND;
+
+        // pozadí
+        ctx.fillStyle = "#0b0b0c";
+        ctx.fillRect(0, 0, W, H);
+
+        // zem
+        ctx.strokeStyle = "#8a8a8f";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(0, G + 0.5);
+        ctx.lineTo(W, G + 0.5);
+        ctx.stroke();
+
+        // pohybující se značky na zemi
+        ctx.fillStyle = "#3a3a3f";
+        const off = GAME.dist % 60;
+        for (let x = -off; x < W; x += 60) {
+            ctx.fillRect(x, G + 8, 24, 2);
+        }
+
+        // překážky
+        ctx.fillStyle = "#cfcfcf";
+        GAME.obs.forEach(o => {
+            rr(ctx, o.x, G - o.h, o.w, o.h, 3);
+            ctx.fill();
         });
-        return list;
+
+        // postava
+        const c = ch();
+        const animate = GAME.running && GAME.onGround;
+        if (c.type === "human") drawHuman(ctx, c, GAME.X, GAME.y, GAME.frame, animate);
+        else drawCat(ctx, c, GAME.X, GAME.y, GAME.frame, animate);
+
+        // skóre
+        ctx.fillStyle = "#9a9aa0";
+        ctx.font = "12px -apple-system, Inter, sans-serif";
+        ctx.textAlign = "right";
+        ctx.fillText("Skóre " + score() + "   Nejlepší " + GAME.best, W - 12, 22);
+        ctx.textAlign = "left";
+
+        // úvodní a koncová obrazovka
+        if (!GAME.running) {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
+            ctx.fillRect(0, 0, W, H);
+            ctx.textAlign = "center";
+            ctx.fillStyle = "#ffffff";
+            if (GAME.over) {
+                ctx.font = "300 24px -apple-system, Inter, sans-serif";
+                ctx.fillText("Konec", W / 2, H / 2 - 8);
+                ctx.font = "13px -apple-system, Inter, sans-serif";
+                ctx.fillText("Skóre " + score() + " · klepni pro novou hru", W / 2, H / 2 + 16);
+            } else {
+                ctx.font = "300 17px -apple-system, Inter, sans-serif";
+                ctx.fillText("Klepni nebo stiskni mezerník", W / 2, H / 2);
+            }
+            ctx.textAlign = "left";
+        }
     }
 
-    function resetRun() {
-        const c = CHARS[GAME.char];
-        GAME.plats = PLATS;
-        GAME.coins = buildCoins();
-        GAME.got = 0;
-        GAME.done = false;
-        GAME.jumpReq = false;
-        GAME.p = { x: 20, y: 448 - c.h, w: c.w, h: c.h, vx: 0, vy: 0, face: 1, ground: false };
-        GAME.startT = performance.now();
-        updateGameInfo();
+    function updateInfo() {
+        const best = GAME.best;
+        $("gameInfo").textContent = `Skóre ${score()} · Nejlepší ${best}`;
     }
 
-    function updateGameInfo() {
-        const best = GAME.bestT ? GAME.bestT.toFixed(1) + " s" : "—";
-        const now = GAME.done ? GAME.elapsed.toFixed(1) + " s" : ((performance.now() - GAME.startT) / 1000).toFixed(1) + " s";
-        $("gameInfo").textContent = `Mince ${GAME.got} / ${GAME.coins.length} · Čas ${now} · Nejlepší ${best}`;
+    function gameLoop() {
+        if (!GAME.active) { GAME.raf = 0; return; }
+        updateGame();
+        drawGame();
+        updateInfo();
+        GAME.raf = requestAnimationFrame(gameLoop);
     }
 
     function buildCharChips() {
@@ -1045,266 +1350,50 @@
             b.addEventListener("click", () => {
                 GAME.char = name;
                 localStorage.setItem("gameChar", name);
+                resetGame();
                 buildCharChips();
-                resetRun();
+                drawGame();
             });
             wrap.appendChild(b);
         });
     }
 
-    function updateGame() {
-        if (GAME.done) return;
-        const p = GAME.p;
-        const c = CHARS[GAME.char];
-        p.w = c.w; p.h = c.h;
-
-        const left = GAME.keys.ArrowLeft || GAME.touch.l;
-        const right = GAME.keys.ArrowRight || GAME.touch.r;
-        const dir = (right ? 1 : 0) - (left ? 1 : 0);
-        p.vx = dir * 3;
-        if (dir) p.face = dir;
-
-        if (GAME.jumpReq) {
-            if (p.ground) { p.vy = -10.8; p.ground = false; }
-            GAME.jumpReq = false;
-        }
-
-        p.vy = Math.min(p.vy + 0.5, 12);
-        const prevBottom = p.y + p.h;
-
-        p.x = Math.max(0, Math.min(GAME.W - p.w, p.x + p.vx));
-        p.y += p.vy;
-        p.ground = false;
-
-        GAME.plats.forEach(pl => {
-            if (p.x + p.w > pl.x + 2 && p.x < pl.x + pl.w - 2 &&
-                p.vy >= 0 && prevBottom <= pl.y + 1 && p.y + p.h >= pl.y) {
-                p.y = pl.y - p.h;
-                p.vy = 0;
-                p.ground = true;
-            }
-        });
-
-        // Pád mimo obrazovku: návrat na start
-        if (p.y > GAME.H + 40) {
-            p.x = 20; p.y = 448 - p.h; p.vy = 0;
-        }
-
-        GAME.coins.forEach(co => {
-            if (!co.got && Math.abs(co.x - (p.x + p.w / 2)) < 16 && Math.abs(co.y - (p.y + p.h / 2)) < 20) {
-                co.got = true;
-                GAME.got++;
-            }
-        });
-
-        if (GAME.got === GAME.coins.length) {
-            GAME.done = true;
-            GAME.elapsed = (performance.now() - GAME.startT) / 1000;
-            if (!GAME.bestT || GAME.elapsed < GAME.bestT) {
-                GAME.bestT = GAME.elapsed;
-                localStorage.setItem("gameBestT", String(GAME.bestT));
-            }
-        }
-    }
-
-    function drawHuman(ctx, hair) {
-        if (hair === "long") {
-            ctx.fillStyle = "#111";
-            ctx.fillRect(5, 4, 16, 20);
-            // Gabi: šaty
-            ctx.fillStyle = "#dedede";
-            ctx.beginPath();
-            ctx.moveTo(13, 14); ctx.lineTo(3, 38); ctx.lineTo(23, 38); ctx.closePath();
-            ctx.fill();
-        } else {
-            // Pavel: nohy a tělo
-            ctx.fillStyle = "#444";
-            ctx.fillRect(6, 28, 6, 10);
-            ctx.fillRect(14, 28, 6, 10);
-            ctx.fillStyle = "#bdbdbd";
-            ctx.fillRect(5, 14, 16, 15);
-        }
-        // hlava
-        const hy = hair === "long" ? 10 : 9;
-        const hr = hair === "long" ? 7.5 : 8;
-        ctx.beginPath();
-        ctx.arc(13, hy, hr, 0, Math.PI * 2);
-        ctx.fillStyle = "#f2f2f2";
-        ctx.fill();
-        ctx.lineWidth = 1.2;
-        ctx.strokeStyle = "#111";
-        ctx.stroke();
-        // vlasy nahoře
-        ctx.fillStyle = "#111";
-        ctx.beginPath();
-        ctx.arc(13, hy, hr + 0.5, Math.PI, 0);
-        ctx.fill();
-        // oko
-        ctx.fillStyle = "#111";
-        ctx.fillRect(16, hy - 1, 1.6, 1.6);
-    }
-
-    function drawCat(ctx, c) {
-        ctx.fillStyle = c.col;
-        ctx.strokeStyle = c.col;
-        ctx.lineWidth = 2.5;
-        // ocas
-        ctx.beginPath();
-        ctx.moveTo(4, 16);
-        ctx.quadraticCurveTo(-2, 10, 2, 4);
-        ctx.stroke();
-        // tělo
-        ctx.beginPath();
-        ctx.ellipse(12, 16, 9, 6, 0, 0, Math.PI * 2);
-        ctx.fill();
-        // nohy
-        ctx.fillRect(6, 19, 2.5, 5);
-        ctx.fillRect(10, 19, 2.5, 5);
-        ctx.fillRect(15, 19, 2.5, 5);
-        ctx.fillRect(18.5, 19, 2.5, 5);
-        // hlava
-        ctx.beginPath();
-        ctx.arc(20, 9, 5.5, 0, Math.PI * 2);
-        ctx.fill();
-        // uši
-        ctx.beginPath();
-        ctx.moveTo(15, 6); ctx.lineTo(16.5, 0); ctx.lineTo(18.5, 5); ctx.closePath(); ctx.fill();
-        ctx.beginPath();
-        ctx.moveTo(20.5, 5); ctx.lineTo(22.5, 0); ctx.lineTo(24.5, 6); ctx.closePath(); ctx.fill();
-        // pruhy u Leoše
-        if (c.stripes) {
-            ctx.strokeStyle = "#555";
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(8, 11); ctx.lineTo(9, 15);
-            ctx.moveTo(12, 10); ctx.lineTo(12, 15);
-            ctx.moveTo(16, 11); ctx.lineTo(16, 15);
-            ctx.stroke();
-        }
-        // oko
-        ctx.fillStyle = "#111";
-        ctx.beginPath();
-        ctx.arc(22, 8, 0.9, 0, Math.PI * 2);
-        ctx.fill();
-    }
-
-    function drawChar(ctx, name, x, y, w, h, face) {
-        const c = CHARS[name];
-        ctx.save();
-        ctx.translate(x + w / 2, y);
-        ctx.scale(face, 1);
-        ctx.translate(-w / 2, 0);
-        if (c.type === "human") {
-            ctx.scale(w / 26, h / 38);
-            drawHuman(ctx, c.hair);
-        } else {
-            ctx.scale(w / 26, h / 24);
-            drawCat(ctx, c);
-        }
-        ctx.restore();
-    }
-
-    function drawGame() {
-        const cv = $("gameCanvas");
-        const ctx = cv.getContext("2d");
-        ctx.fillStyle = "#0b0b0c";
-        ctx.fillRect(0, 0, GAME.W, GAME.H);
-
-        // plošiny
-        GAME.plats.forEach(pl => {
-            ctx.fillStyle = "#2e2e33";
-            ctx.fillRect(pl.x, pl.y, pl.w, pl.h);
-            ctx.fillStyle = "#bdbdbd";
-            ctx.fillRect(pl.x, pl.y, pl.w, 2);
-        });
-
-        // mince
-        GAME.coins.forEach(co => {
-            if (co.got) return;
-            ctx.beginPath();
-            ctx.arc(co.x, co.y, 7, 0, Math.PI * 2);
-            ctx.fillStyle = "#f2f2f2";
-            ctx.fill();
-            ctx.lineWidth = 1.5;
-            ctx.strokeStyle = "#777";
-            ctx.stroke();
-            ctx.fillStyle = "#777";
-            ctx.fillRect(co.x - 1, co.y - 3.5, 2, 7);
-        });
-
-        // hráč
-        const p = GAME.p;
-        drawChar(ctx, GAME.char, p.x, p.y, p.w, p.h, p.face);
-
-        // konec hry
-        if (GAME.done) {
-            ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
-            ctx.fillRect(0, 0, GAME.W, GAME.H);
-            ctx.fillStyle = "#ffffff";
-            ctx.font = "300 28px -apple-system, Inter, sans-serif";
-            ctx.textAlign = "center";
-            ctx.fillText("Hotovo!", GAME.W / 2, GAME.H / 2 - 10);
-            ctx.font = "300 16px -apple-system, Inter, sans-serif";
-            ctx.fillText(GAME.elapsed.toFixed(1) + " s", GAME.W / 2, GAME.H / 2 + 20);
-            ctx.textAlign = "left";
-        }
-    }
-
-    function gameLoop() {
-        if (!GAME.running) return;
-        updateGame();
-        drawGame();
-        updateGameInfo();
-        GAME.raf = requestAnimationFrame(gameLoop);
-    }
-
     function startGame() {
-        if (!GAME.p) resetRun();
+        GAME.active = true;
         buildCharChips();
-        if (GAME.running) return;
-        GAME.running = true;
-        gameLoop();
+        if (!GAME.raf) gameLoop();
     }
 
     function stopGame() {
+        GAME.active = false;
         GAME.running = false;
         cancelAnimationFrame(GAME.raf);
-        GAME.keys = {};
-        GAME.touch = { l: false, r: false };
+        GAME.raf = 0;
     }
 
     // Klávesnice (počítač)
     window.addEventListener("keydown", e => {
-        if (!GAME.running) return;
-        if (["ArrowLeft", "ArrowRight", "ArrowUp", " "].includes(e.key)) e.preventDefault();
-        if (e.key === "ArrowLeft" || e.key === "ArrowRight") GAME.keys[e.key] = true;
-        if ((e.key === "ArrowUp" || e.key === " ") && !e.repeat) GAME.jumpReq = true;
-    });
-    window.addEventListener("keyup", e => {
-        if (e.key === "ArrowLeft" || e.key === "ArrowRight") GAME.keys[e.key] = false;
+        if (!GAME.active) return;
+        if (e.key === " " || e.key === "ArrowUp") {
+            e.preventDefault();
+            if (!e.repeat) action();
+        }
     });
 
-    // Dotyková tlačítka (telefon)
-    document.querySelectorAll("#pad button").forEach(btn => {
-        const k = btn.dataset.k;
-        const down = e => {
-            e.preventDefault();
-            if (k === "l") GAME.touch.l = true;
-            if (k === "r") GAME.touch.r = true;
-            if (k === "j") GAME.jumpReq = true;
-        };
-        const up = e => {
-            e.preventDefault();
-            if (k === "l") GAME.touch.l = false;
-            if (k === "r") GAME.touch.r = false;
-        };
-        btn.addEventListener("pointerdown", down);
-        btn.addEventListener("pointerup", up);
-        btn.addEventListener("pointerleave", up);
-        btn.addEventListener("pointercancel", up);
+    // Dotyk: klepnutí na hru i tlačítko Skok
+    $("gameCanvas").addEventListener("pointerdown", e => {
+        e.preventDefault();
+        action();
+    });
+    $("jumpBtn").addEventListener("pointerdown", e => {
+        e.preventDefault();
+        action();
     });
 
-    $("restartBtn").addEventListener("click", () => resetRun());
+    $("restartBtn").addEventListener("click", () => {
+        resetGame();
+        drawGame();
+    });
 
     // ---------- Data ----------
     function jsonp(params, onOk, onFail) {
@@ -1849,7 +1938,7 @@
         });
     });
 
-    resetRun();
+    resetGame();
     loadData();
 </script>
 </body>
