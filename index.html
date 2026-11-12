@@ -985,11 +985,24 @@
         "Leoš":  { type: "cat",   col: "#a8a8a8", w: 42, h: 32, stripes: true }
     };
 
+    // Fyzika laděná jako u klasických běhacích her: rychlý a ostrý skok
+    const PHYS = {
+        GRAVITY: 0.9,       // na snímek (při 60 fps)
+        JUMP_V: -13.5,      // počáteční rychlost skoku
+        SPEED_MIN: 5,       // výchozí rychlost pohybu překážek
+        SPEED_MAX: 9.5,     // strop rychlosti, aby hra zůstala zvládnutelná
+        SPEED_RAMP: 0.0009, // jak rychle roste rychlost podle vzdálenosti
+        GAP_BASE: 30,       // minimální rozestup = rychlost × tato hodnota (dost místa na dopad)
+        GAP_RANDOM: 140     // náhodná část rozestupu
+    };
+
     const GAME = {
         W: 360, H: 260, GROUND: 220, X: 44,
         active: false, running: false, over: false, raf: 0,
-        frame: 0, speed: 5, dist: 0, y: 0, vy: 0, onGround: true,
-        obs: [], lastGap: 300,
+        frame: 0, last: 0,
+        speed: PHYS.SPEED_MIN, dist: 0,
+        y: 0, vy: 0, onGround: true,
+        obs: [], spawnDist: 220, jumpBuf: 0,
         char: localStorage.getItem("gameChar") || "Pavel",
         best: Number(localStorage.getItem("dinoBest") || 0)
     };
@@ -1001,48 +1014,61 @@
     function resetGame() {
         const c = ch();
         GAME.frame = 0;
-        GAME.speed = 5;
+        GAME.last = 0;
+        GAME.speed = PHYS.SPEED_MIN;
         GAME.dist = 0;
         GAME.y = GAME.GROUND - c.h;
         GAME.vy = 0;
         GAME.onGround = true;
         GAME.obs = [];
-        GAME.lastGap = 300;
+        GAME.spawnDist = 220;
+        GAME.jumpBuf = 0;
         GAME.over = false;
         GAME.running = false;
     }
 
-    // Jeden dotek nebo mezerník: start, nová hra po nárazu, nebo skok
+    // Klepnutí nebo mezerník: start, nová hra po nárazu, nebo skok (s krátkou pamětí)
     function action() {
         if (!GAME.active) return;
         if (GAME.over) resetGame();
         if (!GAME.running) GAME.running = true;
-        if (GAME.onGround) {
-            GAME.vy = -11;
-            GAME.onGround = false;
-        }
+        GAME.jumpBuf = 8;   // skok se provede i když klepneš o pár snímků dřív
     }
 
     function spawnObstacle() {
         const r = Math.random();
         let w, h;
-        if (r < 0.4)      { w = 12; h = 24; }
+        if (r < 0.4)       { w = 12; h = 24; }
         else if (r < 0.75) { w = 16; h = 40; }
-        else              { w = 32; h = 24; }
+        else               { w = 32; h = 24; }
         GAME.obs.push({ x: GAME.W + 10, w, h });
     }
 
-    function updateGame() {
+    // Čas snímku je přepočítán podle skutečného času, takže hra běží stejně na všech telefonech
+    function updateGame(dt) {
         if (!GAME.running) return;
         GAME.frame++;
-        GAME.speed = Math.min(12, 5 + GAME.dist * 0.0012);
-        GAME.dist += GAME.speed;
 
-        // Gravitace a skok
+        GAME.speed = Math.min(PHYS.SPEED_MAX, PHYS.SPEED_MIN + GAME.dist * PHYS.SPEED_RAMP);
+        const step = GAME.speed * dt;
+        GAME.dist += step;
+
         const c = ch();
+
+        // Skok z paměti (jump buffer)
+        if (GAME.jumpBuf > 0) {
+            GAME.jumpBuf -= dt;
+            if (GAME.onGround) {
+                GAME.vy = PHYS.JUMP_V;
+                GAME.onGround = false;
+                GAME.jumpBuf = 0;
+            }
+        }
+
+        // Gravitace
         if (!GAME.onGround) {
-            GAME.vy += 0.6;
-            GAME.y += GAME.vy;
+            GAME.vy += PHYS.GRAVITY * dt;
+            GAME.y += GAME.vy * dt;
             const floor = GAME.GROUND - c.h;
             if (GAME.y >= floor) {
                 GAME.y = floor;
@@ -1051,16 +1077,17 @@
             }
         }
 
-        // Překážky
-        GAME.obs.forEach(o => o.x -= GAME.speed);
+        // Překážky: pohyb a nové podle vzdálenosti (rozestup je závislý na rychlosti)
+        GAME.obs.forEach(o => o.x -= step);
         GAME.obs = GAME.obs.filter(o => o.x + o.w > -20);
-        const last = GAME.obs[GAME.obs.length - 1];
-        if (!last || last.x < GAME.W - GAME.lastGap) {
+
+        GAME.spawnDist -= step;
+        if (GAME.spawnDist <= 0) {
             spawnObstacle();
-            GAME.lastGap = 240 + Math.random() * 200;
+            GAME.spawnDist = PHYS.GAP_BASE * GAME.speed + Math.random() * PHYS.GAP_RANDOM;
         }
 
-        // Náraz
+        // Náraz (hitbox je o něco menší než obrázek, aby to bylo férové)
         const px = GAME.X + 5, py = GAME.y + 4, pw = c.w - 10, ph = c.h - 6;
         for (const o of GAME.obs) {
             const ox = o.x, oy = GAME.GROUND - o.h;
@@ -1090,7 +1117,7 @@
 
     // Člověk s animovaným během (Pavel krátké vlasy, Gabi dlouhé vlasy a šaty)
     function drawHuman(ctx, c, x, y, frame, animate) {
-        const w = c.w, h = c.h;
+        const h = c.h;
         const sw = animate ? Math.sin(frame * 0.4) : 0;
         const long = c.hair === "long";
 
@@ -1327,13 +1354,15 @@
     }
 
     function updateInfo() {
-        const best = GAME.best;
-        $("gameInfo").textContent = `Skóre ${score()} · Nejlepší ${best}`;
+        $("gameInfo").textContent = `Skóre ${score()} · Nejlepší ${GAME.best}`;
     }
 
-    function gameLoop() {
+    function gameLoop(now) {
         if (!GAME.active) { GAME.raf = 0; return; }
-        updateGame();
+        // dt v jednotkách 60 fps, omezeno, aby se po přepnutí záložky hra nerozskočila
+        const dt = GAME.last ? Math.min(2, (now - GAME.last) / 16.67) : 1;
+        GAME.last = now;
+        updateGame(dt);
         drawGame();
         updateInfo();
         GAME.raf = requestAnimationFrame(gameLoop);
@@ -1361,7 +1390,10 @@
     function startGame() {
         GAME.active = true;
         buildCharChips();
-        if (!GAME.raf) gameLoop();
+        if (!GAME.raf) {
+            GAME.last = 0;
+            GAME.raf = requestAnimationFrame(gameLoop);
+        }
     }
 
     function stopGame() {
